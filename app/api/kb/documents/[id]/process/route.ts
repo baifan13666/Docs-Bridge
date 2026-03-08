@@ -19,6 +19,10 @@ import { createClient } from '@/lib/supabase/server';
 import { chunkDocument } from '@/lib/nlp/chunking';
 import { generateBatchDualEmbeddings } from '@/lib/embeddings/server-dual';
 
+// Route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

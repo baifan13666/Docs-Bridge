@@ -4,9 +4,6 @@
  * Crawls PDF documents and extracts text content
  */
 
-// pdf-parse uses CommonJS, need to import it properly
-const pdfParse = require('pdf-parse');
-
 export interface CrawledPDFContent {
   title: string;
   content: string;
@@ -48,6 +45,9 @@ export async function crawlPDF(url: string): Promise<CrawledPDFContent> {
     
     console.log(`[PDF Crawler] Fetched ${buffer.length} bytes`);
 
+    // Dynamically import pdf-parse to avoid build-time issues
+    const pdfParse = require('pdf-parse');
+    
     // Parse PDF
     const data = await pdfParse(buffer);
     

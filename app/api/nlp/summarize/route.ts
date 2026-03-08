@@ -10,6 +10,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { summarizeText } from '@/lib/nlp/summarize';
 
+// Route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

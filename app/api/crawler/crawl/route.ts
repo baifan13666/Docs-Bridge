@@ -13,6 +13,10 @@ import { crawlHTML, isValidCrawlURL } from '@/lib/crawler/html';
 import { crawlPDF, isValidPDFURL } from '@/lib/crawler/pdf';
 import { normalizeHTMLDocument, normalizePDFDocument, validateDocument, sanitizeContent } from '@/lib/crawler/normalize';
 
+// Route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
