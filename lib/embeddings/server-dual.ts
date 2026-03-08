@@ -8,12 +8,6 @@
  * Uses Transformers.js on Node.js for serverless compatibility
  */
 
-import { pipeline, env } from '@xenova/transformers';
-
-// Configure for Node.js environment
-env.allowLocalModels = false;
-env.useBrowserCache = false;
-
 // Model configurations
 const SMALL_MODEL = 'Xenova/e5-small-v2'; // 384-dim
 const LARGE_MODEL = 'Xenova/e5-large-v2'; // 1024-dim
@@ -23,6 +17,24 @@ let smallPipeline: any = null;
 let largePipeline: any = null;
 let isInitializingSmall = false;
 let isInitializingLarge = false;
+let transformers: any = null;
+
+/**
+ * Lazy load transformers library
+ */
+async function getTransformers() {
+  if (transformers) return transformers;
+  
+  // Dynamic import to avoid build-time issues
+  const module = await import('@xenova/transformers');
+  transformers = module;
+  
+  // Configure for Node.js environment
+  module.env.allowLocalModels = false;
+  module.env.useBrowserCache = false;
+  
+  return module;
+}
 
 /**
  * Initialize e5-small model (384-dim)
@@ -40,6 +52,8 @@ async function initSmallModel() {
   try {
     isInitializingSmall = true;
     console.log('[Embeddings] Initializing e5-small model (384-dim)...');
+    
+    const { pipeline } = await getTransformers();
     
     smallPipeline = await pipeline('feature-extraction', SMALL_MODEL, {
       quantized: true,
@@ -71,6 +85,8 @@ async function initLargeModel() {
   try {
     isInitializingLarge = true;
     console.log('[Embeddings] Initializing e5-large model (1024-dim)...');
+    
+    const { pipeline } = await getTransformers();
     
     largePipeline = await pipeline('feature-extraction', LARGE_MODEL, {
       quantized: true,

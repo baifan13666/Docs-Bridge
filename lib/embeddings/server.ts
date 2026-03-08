@@ -5,12 +5,6 @@
  * Uses e5-small (384-dim) for fast query processing
  */
 
-import { pipeline, env } from '@xenova/transformers';
-
-// Configure for Node.js environment
-env.allowLocalModels = false;
-env.useBrowserCache = false;
-
 // Model configuration
 const MODEL_NAME = 'Xenova/e5-small-v2'; // 384-dim
 const EMBEDDING_DIM = 384;
@@ -18,6 +12,24 @@ const EMBEDDING_DIM = 384;
 // Singleton instance
 let embeddingPipeline: any = null;
 let isInitializing = false;
+let transformers: any = null;
+
+/**
+ * Lazy load transformers library
+ */
+async function getTransformers() {
+  if (transformers) return transformers;
+  
+  // Dynamic import to avoid build-time issues
+  const module = await import('@xenova/transformers');
+  transformers = module;
+  
+  // Configure for Node.js environment
+  module.env.allowLocalModels = false;
+  module.env.useBrowserCache = false;
+  
+  return module;
+}
 
 /**
  * Initialize e5-small model
@@ -35,6 +47,8 @@ async function initModel() {
   try {
     isInitializing = true;
     console.log('[Embeddings] Initializing e5-small model...');
+    
+    const { pipeline } = await getTransformers();
     
     embeddingPipeline = await pipeline('feature-extraction', MODEL_NAME, {
       quantized: true,
