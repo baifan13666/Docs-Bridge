@@ -4,8 +4,8 @@
  * Crawls PDF documents and extracts text content
  */
 
-// @ts-ignore - pdf-parse has module resolution issues
-import pdfParse from 'pdf-parse/lib/pdf-parse.js';
+// pdf-parse uses CommonJS, need to import it properly
+const pdfParse = require('pdf-parse');
 
 export interface CrawledPDFContent {
   title: string;
