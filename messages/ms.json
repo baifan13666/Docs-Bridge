@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "DocsBridge",
+    "loading": "Memuatkan...",
+    "error": "Sesuatu telah berlaku",
+    "search": "Cari",
+    "back": "Kembali",
+    "submit": "Hantar",
+    "cancel": "Batal",
+    "close": "Tutup"
+  },
+  "home": {
+    "title": "DocsBridge",
+    "subtitle": "Jambatan AI anda ke dokumen kerajaan",
+    "description": "Cari dan fahami dasar kerajaan di Asia Tenggara dalam bahasa pilihan anda.",
+    "searchPlaceholder": "Tanya tentang mana-mana dasar kerajaan...",
+    "supportedLanguages": "Menyokong Bahasa Inggeris, Melayu, Cina, Tamil, Tagalog, dan Indonesia"
+  },
+  "nav": {
+    "home": "Utama",
+    "search": "Cari",
+    "about": "Tentang",
+    "language": "Bahasa"
+  },
+  "knowledgeBase": {
+    "readOnly": "Dokumen ini adalah baca sahaja"
+  }
+}

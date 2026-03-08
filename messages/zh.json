@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "DocsBridge",
+    "loading": "加载中...",
+    "error": "出了点问题",
+    "search": "搜索",
+    "back": "返回",
+    "submit": "提交",
+    "cancel": "取消",
+    "close": "关闭"
+  },
+  "home": {
+    "title": "DocsBridge",
+    "subtitle": "您的AI政府文件助手",
+    "description": "以您偏好的语言搜索和理解东南亚各国政府政策。",
+    "searchPlaceholder": "询问任何政府政策...",
+    "supportedLanguages": "支持英语、马来语、中文、泰米尔语、他加禄语和印度尼西亚语"
+  },
+  "nav": {
+    "home": "首页",
+    "search": "搜索",
+    "about": "关于",
+    "language": "语言"
+  },
+  "knowledgeBase": {
+    "readOnly": "此文档为只读"
+  }
+}

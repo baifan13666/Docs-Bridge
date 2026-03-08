@@ -1,0 +1,46 @@
+/* Perfect Scrollbar Custom Styles */
+
+/* Hide scrollbar by default */
+.ps__rail-y {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 10;
+  width: 8px !important;
+  right: 2px !important;
+}
+
+/* Show scrollbar on hover or when scrolling */
+.ps:hover > .ps__rail-y,
+.ps--scrolling-y > .ps__rail-y {
+  opacity: 1;
+}
+
+/* Scrollbar track */
+.ps__rail-y {
+  background-color: transparent !important;
+}
+
+/* Scrollbar thumb */
+.ps__thumb-y {
+  background-color: rgba(148, 163, 184, 0.5) !important;
+  width: 6px !important;
+  right: 1px !important;
+  border-radius: 3px !important;
+}
+
+/* Scrollbar thumb on hover */
+.ps__rail-y:hover > .ps__thumb-y,
+.ps__thumb-y:hover {
+  background-color: rgba(148, 163, 184, 0.8) !important;
+  width: 6px !important;
+}
+
+/* Remove default scrollbar */
+.ps {
+  overflow: hidden !important;
+}
+
+/* Ensure content doesn't shift when scrollbar appears */
+.ps__rail-y {
+  position: absolute !important;
+}

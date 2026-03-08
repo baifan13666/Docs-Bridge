@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "DocsBridge",
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "search": "Cari",
+    "back": "Kembali",
+    "submit": "Kirim",
+    "cancel": "Batal",
+    "close": "Tutup"
+  },
+  "home": {
+    "title": "DocsBridge",
+    "subtitle": "Jembatan AI Anda ke dokumen pemerintah",
+    "description": "Cari dan pahami kebijakan pemerintah di Asia Tenggara dalam bahasa pilihan Anda.",
+    "searchPlaceholder": "Tanya tentang kebijakan pemerintah apa pun...",
+    "supportedLanguages": "Mendukung Bahasa Inggris, Melayu, Mandarin, Tamil, Tagalog, dan Indonesia"
+  },
+  "nav": {
+    "home": "Beranda",
+    "search": "Cari",
+    "about": "Tentang",
+    "language": "Bahasa"
+  },
+  "knowledgeBase": {
+    "readOnly": "Dokumen ini hanya dapat dibaca"
+  }
+}

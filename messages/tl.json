@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "DocsBridge",
+    "loading": "Naglo-load...",
+    "error": "May nangyaring mali",
+    "search": "Maghanap",
+    "back": "Bumalik",
+    "submit": "Isumite",
+    "cancel": "Kanselahin",
+    "close": "Isara"
+  },
+  "home": {
+    "title": "DocsBridge",
+    "subtitle": "Ang iyong AI tulay sa mga dokumento ng gobyerno",
+    "description": "Maghanap at unawain ang mga patakaran ng gobyerno sa Timog-Silangang Asya sa iyong gustong wika.",
+    "searchPlaceholder": "Magtanong tungkol sa anumang patakaran ng gobyerno...",
+    "supportedLanguages": "Sumusuporta sa Ingles, Malay, Tsino, Tamil, Tagalog, at Indonesian"
+  },
+  "nav": {
+    "home": "Tahanan",
+    "search": "Maghanap",
+    "about": "Tungkol sa",
+    "language": "Wika"
+  },
+  "knowledgeBase": {
+    "readOnly": "Ang dokumentong ito ay basahin lamang"
+  }
+}

@@ -1,0 +1,251 @@
+{
+  "common": {
+    "appName": "DocsBridge",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "search": "Search",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "active": "Active",
+    "guest": "Guest",
+    "notSignedIn": "Not Signed In"
+  },
+  "home": {
+    "title": "DocsBridge",
+    "subtitle": "Your AI-powered bridge to government documents",
+    "description": "Search and understand government policies across Southeast Asia in your preferred language.",
+    "searchPlaceholder": "Ask about any government policy...",
+    "supportedLanguages": "Supports English, Malay, Chinese, Tamil, Tagalog, and Indonesian"
+  },
+  "nav": {
+    "home": "Home",
+    "search": "Search",
+    "about": "About",
+    "language": "Language"
+  },
+  "auth": {
+    "signIn": "Sign in to DocsBridge",
+    "signInDescription": "Access official government data securely",
+    "freeQueryUsed": "You've used your free query.",
+    "signInToContinue": "Please sign in to view the answer and continue your chat.",
+    "continueWithGoogle": "Continue with Google",
+    "orSignInWithEmail": "Or sign in with email",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "your@email.com",
+    "sendLoginCode": "Send Login Code",
+    "sending": "Sending...",
+    "checkEmail": "Check your email for the 6-digit code!",
+    "successfullySignedIn": "Successfully signed in!",
+    "enterCode": "Enter 6-Digit Code",
+    "codePlaceholder": "000000",
+    "sentTo": "Sent to {email}",
+    "verifyCode": "Verify Code",
+    "verifying": "Verifying...",
+    "backToEmail": "← Back to email",
+    "termsAndPrivacy": "By signing in, you agree to our Terms of Service and Privacy Policy.",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "chat": {
+    "welcome": "Welcome to DocsBridge!",
+    "welcomeDescription": "I can help you understand government policies, subsidies, and services.",
+    "freeQueryRemaining": "You have 1 free query remaining before sign-in is required.",
+    "typeOrVoice": "You can type your question, use your voice, or select a topic below to get started.",
+    "messagePlaceholder": "Message DocsBridge...",
+    "aiDisclaimer": "AI can make mistakes. Please verify important information with official sources.",
+    "newChat": "New Chat",
+    "attachFile": "Attach file",
+    "useVoice": "Use voice input",
+    "stopRecording": "Stop recording",
+    "listening": "Listening...",
+    "playResponse": "Play response",
+    "stopPlaying": "Stop playing",
+    "sendMessage": "Send message",
+    "signInToStartChat": "Sign in to start new chat",
+    "signInToSaveHistory": "Sign in to save your chat history and access more features.",
+    "signInToGetResponse": "Please sign in to get AI responses and continue the conversation.",
+    "topics": {
+      "healthcare": "Healthcare subsidies",
+      "cashAid": "Cash aid (STR)",
+      "education": "Education support",
+      "housing": "Housing assistance"
+    }
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "newChat": "New Chat",
+    "search": "Search",
+    "knowledgeBase": "Knowledge Base",
+    "officialGovDocs": "Official Gov Docs",
+    "manageKnowledge": "Manage Knowledge",
+    "today": "Today",
+    "previous7Days": "Previous 7 Days",
+    "older": "Older",
+    "userProfile": "User Profile",
+    "freePlan": "Free Plan",
+    "proPlan": "Pro Plan",
+    "businessPlan": "Business Plan",
+    "proFeature": "PRO",
+    "confirmDeleteConversation": "Are you sure you want to delete this conversation? This action cannot be undone."
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "account": "Account",
+      "plan": "Plan & Subscription",
+      "notifications": "Notifications",
+      "usage": "Usage"
+    },
+    "account": {
+      "title": "Account Profile",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "DocsBridge User",
+      "emailAddress": "Email Address",
+      "languagePreference": "Language Preference",
+      "fontSize": "Font Size",
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "signOut": "Sign Out",
+      "saveSuccess": "Changes saved successfully!",
+      "fontSizes": {
+        "small": "Small",
+        "medium": "Medium (Default)",
+        "large": "Large",
+        "extraLarge": "Extra Large"
+      },
+      "languages": {
+        "en": "English (EN)",
+        "ms": "Bahasa Melayu (BM)",
+        "zh": "中文",
+        "ta": "தமிழ்",
+        "tl": "Tagalog (TL)",
+        "id": "Bahasa Indonesia (ID)"
+      }
+    },
+    "plan": {
+      "title": "Plan & Subscription",
+      "currentPlan": "CURRENT PLAN",
+      "recommended": "RECOMMENDED",
+      "free": {
+        "name": "Free Plan",
+        "price": "RM 0",
+        "period": "/month",
+        "description": "Basic access for citizens to understand government services.",
+        "features": {
+          "assistant": "DocsBridge Gov Assistant",
+          "knowledgeBase": "Official Knowledge Base access",
+          "messageLimits": "Standard message limits"
+        }
+      },
+      "pro": {
+        "name": "Pro Plan",
+        "price": "RM 20",
+        "period": "/month",
+        "description": "Advanced features for power users and professionals.",
+        "features": {
+          "everything": "Everything in Free Plan",
+          "uploadDocs": "Upload private documents",
+          "personalKB": "Create personal knowledge base",
+          "higherLimits": "Higher AI message limits"
+        }
+      },
+      "business": {
+        "name": "Business Plan",
+        "price": "Custom",
+        "description": "For agencies, organizations, and team collaboration.",
+        "features": {
+          "everything": "Everything in Pro Plan",
+          "aiAgents": "Create AI agents",
+          "teamWorkspace": "Team workspace & sharing",
+          "prioritySupport": "Dedicated priority support"
+        }
+      },
+      "currentlyActive": "Currently Active",
+      "upgradeToPro": "Upgrade to Pro",
+      "contactUs": "Contact Us",
+      "upgradeSuccess": "Plan upgraded successfully!"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "soundNotifications": "Sound Notifications",
+      "soundDescription": "Play a sound when AI completes a response",
+      "notificationSound": "Notification Sound",
+      "testSound": "Test Sound",
+      "aboutNotifications": "About Notifications",
+      "aboutDescription": "Sound notifications help you know when the AI has finished generating a response, especially useful when you're multitasking or have the tab in the background.",
+      "sounds": {
+        "default": "Default",
+        "chime": "Chime",
+        "bell": "Bell",
+        "ding": "Ding",
+        "pop": "Pop"
+      }
+    },
+    "usage": {
+      "title": "Usage Summary",
+      "aiMessageLimit": "AI Message Limit",
+      "cycleResets": "Cycle resets in {days} days",
+      "messagesUsed": "Messages Used",
+      "tokensUsed": "Tokens Used",
+      "tokensDescription": "Total tokens consumed this cycle",
+      "noData": "No usage data available",
+      "approachingLimit": "You are approaching your free limit. {upgradeLink} to increase your capacity.",
+      "approachingLimitSimple": "You are approaching your free limit.",
+      "upgradeToPro": "Upgrade to Pro",
+      "toIncreaseCapacity": "to increase your capacity."
+    }
+  },
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "subtitle": "Folders & Documents",
+    "folders": "Folders",
+    "newFolder": "New folder",
+    "folderNamePlaceholder": "Folder name",
+    "newDocument": "New Document",
+    "documents": "document",
+    "documentsPlural": "documents",
+    "noDocumentSelected": "No document selected",
+    "createFirstDocument": "Create your first document",
+    "selectOrCreate": "Create a new document or select one from the sidebar",
+    "createFolderFirst": "Create a folder first to organize your documents",
+    "untitled": "Untitled",
+    "startWriting": "Start writing...",
+    "readOnly": "This document is read-only",
+    "changeIcon": "Change icon",
+    "hideSidebar": "Hide sidebar",
+    "showSidebar": "Show sidebar",
+    "edited": "Edited {date}",
+    "deleteDocument": "Delete this document?",
+    "deleteFolder": "Delete folder \"{name}\" and all its documents?",
+    "attachments": "Attachments ({count})",
+    "removeAttachment": "Remove attachment",
+    "downloadAttachment": "Download",
+    "uploadFile": "Upload file",
+    "welcomeDocument": "Welcome Document",
+    "gettingStarted": "Getting Started",
+    "toolbar": {
+      "bold": "Bold (Ctrl+B)",
+      "italic": "Italic (Ctrl+I)",
+      "underline": "Underline (Ctrl+U)",
+      "strikethrough": "Strikethrough",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bullet list",
+      "numberedList": "Numbered list"
+    }
+  },
+  "header": {
+    "archive": "Archive",
+    "categories": "Categories",
+    "delete": "Delete"
+  }
+}
