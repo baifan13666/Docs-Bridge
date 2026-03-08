@@ -19,6 +19,10 @@ import { generateLargeEmbedding, cosineSimilarity } from '@/lib/embeddings/serve
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 
+// Route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 interface SearchResult {
   chunk_id: string;
   document_id: string;
