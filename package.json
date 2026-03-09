@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test:langchain": "tsx lib/langchain/test.ts",
-    "langchain:setup": "pnpm add @langchain/openai @langchain/core zod && pnpm test:langchain"
+    "langchain:setup": "pnpm add @langchain/openai @langchain/core zod && pnpm test:langchain",
+    "test:crawler": "tsx scripts/test-crawler.ts"
   },
   "dependencies": {
     "@browser-ai/transformers-js": "^2.1.6",
