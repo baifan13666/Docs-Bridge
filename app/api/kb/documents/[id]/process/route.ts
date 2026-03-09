@@ -31,18 +31,22 @@ export async function POST(
     const { id: documentId } = await params;
     const supabase = await createClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Get request body
+    // Get request body first to check if this is a system call
     const body = await request.json().catch(() => ({}));
-    const { force_reprocess = false } = body;
+    const { force_reprocess = false, system_call = false } = body;
+
+    // Check authentication (skip for system calls from crawler)
+    let user = null;
+    if (!system_call) {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      user = authUser;
+    }
 
     console.log(`[Process Document] Starting processing for document ${documentId}`);
     console.log(`[Process Document] Force reprocess: ${force_reprocess}`);
@@ -61,8 +65,8 @@ export async function POST(
       );
     }
 
-    // Check authorization (user owns document OR it's a government document)
-    if (document.user_id !== user.id && document.document_type !== 'gov_crawled') {
+    // Check authorization (user owns document OR it's a government document OR system call)
+    if (!system_call && user && document.user_id !== user.id && document.document_type !== 'gov_crawled') {
       return NextResponse.json(
         { success: false, error: 'Forbidden' },
         { status: 403 }
@@ -119,19 +123,26 @@ export async function POST(
       });
     }
 
-    // Step 2: Generate dual embeddings for all chunks
-    console.log('[Process Document] Step 2: Generating embeddings...');
+    // Step 2: Generate DUAL embeddings for all chunks
+    // - embedding_small (384-dim, e5-small): Fast coarse search
+    // - embedding_large (1024-dim, e5-large): Accurate reranking
+    console.log('[Process Document] Step 2: Generating dual embeddings...');
+    console.log('[Process Document] - Small (384-dim, e5-small): for fast coarse search');
+    console.log('[Process Document] - Large (1024-dim, e5-large): for accurate reranking');
+    
     const chunkTexts = chunks.map(c => c.text);
     const embeddings = await generateBatchDualEmbeddings(chunkTexts);
 
-    // Step 3: Save chunks to database
-    console.log('[Process Document] Step 3: Saving chunks to database...');
+    console.log(`[Process Document] Generated ${embeddings.length} dual embeddings`);
+
+    // Step 3: Save chunks to database with BOTH embeddings
+    console.log('[Process Document] Step 3: Saving chunks with dual embeddings...');
     const chunksToInsert = chunks.map((chunk, index) => ({
       document_id: documentId,
       chunk_text: chunk.text,
       chunk_index: chunk.index,
-      embedding_small: embeddings[index].small,
-      embedding_large: embeddings[index].large,
+      embedding_small: embeddings[index].small,  // 384-dim for coarse search
+      embedding_large: embeddings[index].large,  // 1024-dim for reranking
       token_count: chunk.tokenCount,
       language: document.language || null
     }));
