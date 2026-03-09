@@ -1,0 +1,28 @@
+DocsBridge - Your Login Code
+================================
+
+Hello!
+
+Your verification code is:
+
+{{ .Token }}
+
+This code will expire in 10 minutes.
+
+Enter this code on the DocsBridge sign-in page to access your account.
+
+SECURITY NOTICE
+---------------
+Never share this code with anyone. DocsBridge staff will never ask for your login code.
+
+Didn't request this code?
+You can safely ignore this email. Your account remains secure.
+
+Need Help?
+----------
+If you're having trouble signing in, contact our support team at:
+support@docsbridge.com
+
+---
+© 2024 DocsBridge. All rights reserved.
+Bridging citizens to government services across Southeast Asia.
