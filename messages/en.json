@@ -247,5 +247,72 @@
     "archive": "Archive",
     "categories": "Categories",
     "delete": "Delete"
+  },
+  "errors": {
+    "uploadFileFailed": "Failed to upload file",
+    "deleteAttachmentFailed": "Failed to delete attachment",
+    "deleteDocumentFailed": "Failed to delete document",
+    "deleteFolderFailed": "Failed to delete folder",
+    "editFolderFailed": "Failed to edit folder",
+    "editDocumentFailed": "Failed to edit document",
+    "cannotEditSystemFolder": "Cannot edit system folder",
+    "systemFoldersCannotBeModified": "System folders cannot be modified",
+    "noSpeechDetected": "No speech detected. Please try again.",
+    "microphoneAccessDenied": "Microphone access denied. Please allow microphone access in your browser settings.",
+    "networkError": "Network error. Please check your internet connection."
+  },
+  "success": {
+    "documentLoadedFromChat": "Document loaded from chat source"
+  },
+  "chatInterface": {
+    "stopPlaying": "Stop Playing",
+    "playResponse": "Play Response",
+    "showOriginal": "Show Original",
+    "translateTo": "Translate to {dialect}",
+    "translating": "Translating...",
+    "simplifying": "Simplifying...",
+    "simplifyProfessionalWords": "Simplify Professional Words",
+    "summarizing": "Summarizing...",
+    "summarizeOverall": "Summarize Overall",
+    "summarizeInPointForm": "Summarize in Point Form",
+    "voiceWarning": "Voice pack not available for this language",
+    "voiceWarningDescription": "To get better voice quality, install the language voice pack in your system settings.",
+    "howToInstallVoicePacks": "How to install voice packs",
+    "windowsInstructions": "Windows: Settings → Time & Language → Speech → Add voices",
+    "macosInstructions": "macOS: System Preferences → Accessibility → Spoken Content → Manage Voices",
+    "mobileInstructions": "Android/iOS: Usually pre-installed, check system language settings",
+    "readabilityGrade": "Readability: Grade {grade}",
+    "originalGrade": "Original: Grade {grade}",
+    "percentEasier": "{percent}% easier",
+    "simplified": "Simplified",
+    "hoverTip": "💡 Tip: Hover over underlined words to see explanations",
+    "translationQuality": "Translation Quality",
+    "confidence": "Confidence: {percent}%",
+    "lowConfidenceWarning": "⚠️ Low confidence - translation may not be fully accurate",
+    "highConfidence": "✓ High",
+    "mediumConfidence": "~ Medium",
+    "lowConfidence": "! Low",
+    "keyPoints": "Key Points:",
+    "actionsToTake": "Actions to Take:",
+    "reducedWords": "📊 Reduced from {original} to {summary} words ({reduction}% shorter)",
+    "confidenceLevel": "Confidence: {percent}% ({level})",
+    "sources": "📚 Sources ({count})",
+    "viewExternalSource": "View external source →",
+    "clickToViewInKB": "📄 Click to view in KB →",
+    "thinking": "Thinking..."
+  },
+  "chatPage": {
+    "docsBridgeAI": "DocsBridge AI",
+    "docsBridgePlus": "DocsBridge Plus",
+    "fasterResponses": "Faster responses, great for quick queries",
+    "bestAccuracy": "Best accuracy for complex questions"
+  },
+  "knowledgeBaseInterface": {
+    "noDocumentSelected": "No document selected",
+    "createFirstDocument": "Create your first document",
+    "selectOrCreate": "Create a new document or select one from the sidebar",
+    "createFolderFirst": "Create a folder first to organize your documents",
+    "retry": "Retry",
+    "createYourFirstDocument": "Create your first document"
   }
 }

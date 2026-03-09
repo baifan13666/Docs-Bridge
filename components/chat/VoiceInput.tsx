@@ -69,11 +69,11 @@ export default function VoiceInput({ onTranscript, disabled = false, language = 
           // Handle specific errors
           if (event.error === 'no-speech') {
             console.log('[VoiceInput] No speech detected');
-            alert('No speech detected. Please try again.');
+            alert(t('errors.noSpeechDetected'));
           } else if (event.error === 'not-allowed') {
-            alert('Microphone access denied. Please allow microphone access in your browser settings.');
+            alert(t('errors.microphoneAccessDenied'));
           } else if (event.error === 'network') {
-            alert('Network error. Please check your internet connection.');
+            alert(t('errors.networkError'));
           }
         };
 

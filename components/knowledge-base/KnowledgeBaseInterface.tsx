@@ -49,7 +49,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
         setSelectedDoc(doc);
         setShowDocList(false);
         // Scroll to document in list if needed
-        toast.success('Document loaded from chat source');
+        toast.success(t('success.documentLoadedFromChat'));
       }
     }
   }, [initialDocumentId, documents]);
@@ -207,7 +207,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
       }
     } catch (err: any) {
       console.error('Error deleting document:', err);
-      toast.error('Failed to delete document', {
+      toast.error(t('errors.deleteDocumentFailed'), {
         description: err.message
       });
     }
@@ -230,7 +230,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
     } catch (err: any) {
       console.error('Error deleting folder:', err);
       // Show user-friendly error message
-      toast.error('Failed to delete folder', {
+      toast.error(t('errors.deleteFolderFailed'), {
         description: err.message
       });
       // Reload folders to sync with server state
@@ -243,8 +243,8 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
       // Check if folder is a system folder
       const folder = folders.find(f => f.id === id);
       if (folder?.isSystem) {
-        toast.error('Cannot edit system folder', {
-          description: 'System folders cannot be modified'
+        toast.error(t('errors.cannotEditSystemFolder'), {
+          description: t('errors.systemFoldersCannotBeModified')
         });
         return;
       }
@@ -267,7 +267,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
       }
     } catch (err: any) {
       console.error('Error editing folder:', err);
-      toast.error('Failed to edit folder', {
+      toast.error(t('errors.editFolderFailed'), {
         description: err.message
       });
     }
@@ -294,7 +294,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
       }
     } catch (err: any) {
       console.error('Error editing document:', err);
-      toast.error('Failed to edit document', {
+      toast.error(t('errors.editDocumentFailed'), {
         description: err.message
       });
     }
@@ -305,7 +305,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
       <div className="flex-1 flex items-center justify-center bg-(--color-bg-primary)">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-(--color-accent) border-t-transparent animate-spin"></div>
-          <p className="text-(--color-text-secondary)">Loading...</p>
+          <p className="text-(--color-text-secondary)">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -316,7 +316,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
       <div className="flex-1 flex items-center justify-center bg-(--color-bg-primary)">
         <div className="text-center max-w-md px-6">
           <span className="material-symbols-outlined text-6xl text-red-500 mb-4">error</span>
-          <h3 className="text-xl font-semibold text-(--color-text-primary) mb-2">Error</h3>
+          <h3 className="text-xl font-semibold text-(--color-text-primary) mb-2">{t('common.error')}</h3>
           <p className="text-(--color-text-secondary) mb-4">{error}</p>
           <button
             onClick={() => {
@@ -325,7 +325,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
             }}
             className="px-6 py-2 bg-(--color-accent) text-white rounded-lg hover:bg-(--color-accent-hover) transition-colors cursor-pointer"
           >
-            Retry
+            {t('knowledgeBaseInterface.retry')}
           </button>
         </div>
       </div>
@@ -458,7 +458,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
               <>
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-base">schedule</span>
-                  <span>Edited {selectedDoc.lastEdited.toLocaleString()}</span>
+                  <span>{t('knowledgeBase.edited', { date: selectedDoc.lastEdited.toLocaleString() })}</span>
                 </div>
                 <button className="p-2 hover:bg-(--color-bg-tertiary) rounded-lg transition-all duration-200 cursor-pointer">
                   <span className="material-symbols-outlined text-lg">more_horiz</span>

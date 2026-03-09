@@ -583,7 +583,7 @@ export default function ChatInterface({
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-(--color-bg-secondary) text-(--color-text-primary) rounded-full text-sm hover:bg-(--color-bg-tertiary) transition-colors border border-(--color-border) shadow-sm font-medium cursor-pointer"
                             >
                               <span className="material-symbols-outlined text-base text-(--color-accent)">{isSpeaking ? 'stop_circle' : 'volume_up'}</span>
-                              {isSpeaking ? 'Stop Playing' : 'Play Response'}
+                              {isSpeaking ? t('chatInterface.stopPlaying') : t('chatInterface.playResponse')}
                             </button>
                           )}
                           
@@ -604,10 +604,10 @@ export default function ChatInterface({
                                 {loadingEnhancements[message.id]?.translating ? 'sync' : 'translate'}
                               </span>
                               {loadingEnhancements[message.id]?.translating 
-                                ? 'Translating...' 
+                                ? t('chatInterface.translating')
                                 : messageView[message.id] === 'translated'
-                                ? 'Show Original'
-                                : `Translate to ${detectedLanguage.dialect}`
+                                ? t('chatInterface.showOriginal')
+                                : t('chatInterface.translateTo', { dialect: detectedLanguage.dialect })
                               }
                             </button>
                           )}
@@ -628,10 +628,10 @@ export default function ChatInterface({
                               {loadingEnhancements[message.id]?.simplifying ? 'sync' : messageView[message.id] === 'simplified' ? 'description' : 'auto_awesome'}
                             </span>
                             {loadingEnhancements[message.id]?.simplifying 
-                              ? 'Simplifying...' 
+                              ? t('chatInterface.simplifying')
                               : messageView[message.id] === 'simplified'
-                              ? 'Show Original'
-                              : 'Simplify Professional Words'
+                              ? t('chatInterface.showOriginal')
+                              : t('chatInterface.simplifyProfessionalWords')
                             }
                           </button>
                           
@@ -645,7 +645,7 @@ export default function ChatInterface({
                               <span className="material-symbols-outlined text-base text-(--color-accent)">
                                 {loadingEnhancements[message.id]?.summarizingTldr ? 'sync' : 'summarize'}
                               </span>
-                              {loadingEnhancements[message.id]?.summarizingTldr ? 'Summarizing...' : 'Summarize Overall'}
+                              {loadingEnhancements[message.id]?.summarizingTldr ? t('chatInterface.summarizing') : t('chatInterface.summarizeOverall')}
                             </button>
                           )}
                           
@@ -659,7 +659,7 @@ export default function ChatInterface({
                               <span className="material-symbols-outlined text-base text-(--color-accent)">
                                 {loadingEnhancements[message.id]?.summarizingBullets ? 'sync' : 'format_list_bulleted'}
                               </span>
-                              {loadingEnhancements[message.id]?.summarizingBullets ? 'Summarizing...' : 'Summarize in Point Form'}
+                              {loadingEnhancements[message.id]?.summarizingBullets ? t('chatInterface.summarizing') : t('chatInterface.summarizeInPointForm')}
                             </button>
                           )}
                         </div>
@@ -674,16 +674,16 @@ export default function ChatInterface({
                                   {missingVoiceWarning}
                                 </p>
                                 <p className="text-xs text-orange-600 dark:text-orange-400">
-                                  To get better voice quality, install the language voice pack in your system settings.
+                                  {t('chatInterface.voiceWarningDescription')}
                                 </p>
                                 <details className="mt-2">
                                   <summary className="text-xs text-orange-600 dark:text-orange-400 cursor-pointer hover:underline">
-                                    How to install voice packs
+                                    {t('chatInterface.howToInstallVoicePacks')}
                                   </summary>
                                   <div className="mt-2 text-xs text-orange-600 dark:text-orange-400 space-y-1">
-                                    <p><strong>Windows:</strong> Settings → Time & Language → Speech → Add voices</p>
-                                    <p><strong>macOS:</strong> System Preferences → Accessibility → Spoken Content → Manage Voices</p>
-                                    <p><strong>Android/iOS:</strong> Usually pre-installed, check system language settings</p>
+                                    <p>{t('chatInterface.windowsInstructions')}</p>
+                                    <p>{t('chatInterface.macosInstructions')}</p>
+                                    <p>{t('chatInterface.mobileInstructions')}</p>
                                   </div>
                                 </details>
                               </div>
@@ -702,7 +702,7 @@ export default function ChatInterface({
                       />
                     ) : (
                       <p className="whitespace-pre-wrap">
-                        {getMessageContent(message.id, message.content)}
+                        {getMessageContent(message.id, message.content) || (message.id.startsWith('streaming-') && isStreaming ? t('chatInterface.thinking') : '')}
                         {/* Streaming cursor */}
                         {message.id.startsWith('streaming-') && isStreaming && (
                           <span className="inline-block w-2 h-4 ml-1 bg-(--color-accent) animate-pulse"></span>
@@ -717,10 +717,10 @@ export default function ChatInterface({
                           <span className="text-lg">📊</span>
                           <div className="flex-1">
                             <div className="font-semibold text-(--color-text-primary)">
-                              Readability: Grade {messageEnhancements[message.id]!.simplified!.readability_score.simplified.toFixed(1)}
+                              {t('chatInterface.readabilityGrade', { grade: messageEnhancements[message.id]!.simplified!.readability_score.simplified.toFixed(1) })}
                             </div>
                             <div className="text-(--color-text-secondary) mt-0.5">
-                              Original: Grade {messageEnhancements[message.id]!.simplified!.readability_score.original.toFixed(1)}
+                              {t('chatInterface.originalGrade', { grade: messageEnhancements[message.id]!.simplified!.readability_score.original.toFixed(1) })}
                             </div>
                           </div>
                           <div className="text-right">
@@ -729,14 +729,14 @@ export default function ChatInterface({
                                 const original = messageEnhancements[message.id]!.simplified!.readability_score.original;
                                 const simplified = messageEnhancements[message.id]!.simplified!.readability_score.simplified;
                                 const improvement = ((original - simplified) / original * 100);
-                                return improvement > 0 ? `${improvement.toFixed(0)}% easier` : 'Simplified';
+                                return improvement > 0 ? t('chatInterface.percentEasier', { percent: improvement.toFixed(0) }) : t('chatInterface.simplified');
                               })()}
                             </div>
                           </div>
                         </div>
                         {messageEnhancements[message.id]!.simplified!.difficult_words.length > 0 && (
                           <div className="mt-2 pt-2 border-t border-(--color-border) text-[11px] text-(--color-text-secondary)">
-                            💡 Tip: Hover over <span className="underline decoration-dashed">underlined words</span> to see explanations
+                            {t('chatInterface.hoverTip')}
                           </div>
                         )}
                       </div>
@@ -749,7 +749,7 @@ export default function ChatInterface({
                           <span className="text-lg">🌐</span>
                           <div className="flex-1">
                             <div className="font-semibold text-(--color-text-primary)">
-                              Translation Quality
+                              {t('chatInterface.translationQuality')}
                             </div>
                             {(() => {
                               const translations = messageEnhancements[message.id]!.translations!;
@@ -760,11 +760,11 @@ export default function ChatInterface({
                               return (
                                 <>
                                   <div className="text-(--color-text-secondary) mt-0.5">
-                                    Confidence: {(confidence * 100).toFixed(0)}%
+                                    {t('chatInterface.confidence', { percent: (confidence * 100).toFixed(0) })}
                                   </div>
                                   {confidence < 0.8 && (
                                     <div className="mt-1 text-orange-600 dark:text-orange-400 text-[11px]">
-                                      ⚠️ Low confidence - translation may not be fully accurate
+                                      {t('chatInterface.lowConfidenceWarning')}
                                     </div>
                                   )}
                                 </>
@@ -779,11 +779,11 @@ export default function ChatInterface({
                               const confidence = translation?.confidence || 0;
                               
                               if (confidence >= 0.9) {
-                                return <span className="text-green-600 dark:text-green-400 font-semibold">✓ High</span>;
+                                return <span className="text-green-600 dark:text-green-400 font-semibold">{t('chatInterface.highConfidence')}</span>;
                               } else if (confidence >= 0.7) {
-                                return <span className="text-yellow-600 dark:text-yellow-400 font-semibold">~ Medium</span>;
+                                return <span className="text-yellow-600 dark:text-yellow-400 font-semibold">{t('chatInterface.mediumConfidence')}</span>;
                               } else {
-                                return <span className="text-orange-600 dark:text-orange-400 font-semibold">! Low</span>;
+                                return <span className="text-orange-600 dark:text-orange-400 font-semibold">{t('chatInterface.lowConfidence')}</span>;
                               }
                             })()}
                           </div>
@@ -796,7 +796,7 @@ export default function ChatInterface({
                       <div className="mt-4 pt-4 border-t border-(--color-border)">
                         <div className="space-y-3">
                           <div>
-                            <p className="text-xs font-semibold text-(--color-text-secondary) mb-2">Key Points:</p>
+                            <p className="text-xs font-semibold text-(--color-text-secondary) mb-2">{t('chatInterface.keyPoints')}</p>
                             <ul className="list-disc list-inside space-y-1">
                               {messageEnhancements[message.id]!.summary!.bullet_points.map((point, idx) => (
                                 <li key={idx} className="text-xs text-(--color-text-primary)">{point}</li>
@@ -806,7 +806,7 @@ export default function ChatInterface({
                           
                           {messageEnhancements[message.id]!.summary!.key_actions.length > 0 && (
                             <div>
-                              <p className="text-xs font-semibold text-(--color-text-secondary) mb-2">Actions to Take:</p>
+                              <p className="text-xs font-semibold text-(--color-text-secondary) mb-2">{t('chatInterface.actionsToTake')}</p>
                               <ol className="list-decimal list-inside space-y-1">
                                 {messageEnhancements[message.id]!.summary!.key_actions.map((action, idx) => (
                                   <li key={idx} className="text-xs text-(--color-text-primary)">{action}</li>
@@ -816,8 +816,11 @@ export default function ChatInterface({
                           )}
                           
                           <p className="text-[11px] text-(--color-text-secondary)">
-                            📊 Reduced from {messageEnhancements[message.id]!.summary!.word_count.original} to {messageEnhancements[message.id]!.summary!.word_count.summary} words 
-                            ({messageEnhancements[message.id]!.summary!.word_count.reduction}% shorter)
+                            {t('chatInterface.reducedWords', { 
+                              original: messageEnhancements[message.id]!.summary!.word_count.original,
+                              summary: messageEnhancements[message.id]!.summary!.word_count.summary,
+                              reduction: messageEnhancements[message.id]!.summary!.word_count.reduction
+                            })}
                           </p>
                         </div>
                       </div>
@@ -832,7 +835,10 @@ export default function ChatInterface({
                              message.confidence.level === 'medium' ? '🟡' : '🔴'}
                           </span>
                           <span className="text-xs font-semibold text-(--color-text-secondary)">
-                            Confidence: {(message.confidence.overall * 100).toFixed(0)}% ({message.confidence.level})
+                            {t('chatInterface.confidenceLevel', { 
+                              percent: (message.confidence.overall * 100).toFixed(0),
+                              level: message.confidence.level
+                            })}
                           </span>
                         </div>
                         <p className="text-[11px] text-(--color-text-secondary)">
@@ -845,7 +851,7 @@ export default function ChatInterface({
                     {message.sources && message.sources.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-(--color-border)">
                         <p className="text-xs font-semibold text-(--color-text-secondary) mb-2">
-                          📚 Sources ({message.sources.length})
+                          {t('chatInterface.sources', { count: message.sources.length })}
                         </p>
                         <div className="space-y-2">
                           {message.sources.map((source, idx) => (
@@ -882,12 +888,12 @@ export default function ChatInterface({
                                     onClick={(e) => e.stopPropagation()}
                                     className="text-(--color-accent) hover:underline text-[10px] inline-block"
                                   >
-                                    View external source →
+                                    {t('chatInterface.viewExternalSource')}
                                   </a>
                                 )}
                                 {isAuthenticated && source.document_id && (
                                   <span className="text-(--color-accent) text-[10px] font-medium">
-                                    📄 Click to view in KB →
+                                    {t('chatInterface.clickToViewInKB')}
                                   </span>
                                 )}
                               </div>

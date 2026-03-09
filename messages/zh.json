@@ -23,6 +23,296 @@
     "language": "语言"
   },
   "knowledgeBase": {
-    "readOnly": "此文档为只读"
+    "readOnly": "此文档为只读",
+    "title": "知识库",
+    "subtitle": "文件夹和文档",
+    "folders": "文件夹",
+    "newFolder": "新建文件夹",
+    "folderNamePlaceholder": "文件夹名称",
+    "newDocument": "新建文档",
+    "documents": "文档",
+    "documentsPlural": "文档",
+    "noDocumentSelected": "未选择文档",
+    "createFirstDocument": "创建您的第一个文档",
+    "selectOrCreate": "创建新文档或从侧边栏选择",
+    "createFolderFirst": "先创建文件夹来组织您的文档",
+    "untitled": "无标题",
+    "startWriting": "开始写作...",
+    "changeIcon": "更改图标",
+    "hideSidebar": "隐藏侧边栏",
+    "showSidebar": "显示侧边栏",
+    "edited": "编辑于 {date}",
+    "deleteDocument": "删除此文档？",
+    "deleteFolder": "删除文件夹 \"{name}\" 及其所有文档？",
+    "attachments": "附件 ({count})",
+    "removeAttachment": "移除附件",
+    "downloadAttachment": "下载",
+    "uploadFile": "上传文件",
+    "toolbar": {
+      "bold": "粗体 (Ctrl+B)",
+      "italic": "斜体 (Ctrl+I)",
+      "underline": "下划线 (Ctrl+U)",
+      "strikethrough": "删除线",
+      "heading1": "标题 1",
+      "heading2": "标题 2",
+      "heading3": "标题 3",
+      "bulletList": "项目符号列表",
+      "numberedList": "编号列表"
+    }
+  },
+  "auth": {
+    "signIn": "登录 DocsBridge",
+    "signInDescription": "安全访问官方政府数据",
+    "freeQueryUsed": "您已使用免费查询。",
+    "signInToContinue": "请登录以查看答案并继续聊天。",
+    "continueWithGoogle": "使用 Google 继续",
+    "orSignInWithEmail": "或使用电子邮件登录",
+    "emailAddress": "电子邮件地址",
+    "emailPlaceholder": "your@email.com",
+    "sendLoginCode": "发送登录代码",
+    "sending": "发送中...",
+    "checkEmail": "请查看您的电子邮件获取 6 位数代码！",
+    "successfullySignedIn": "成功登录！",
+    "enterCode": "输入 6 位数代码",
+    "codePlaceholder": "000000",
+    "sentTo": "已发送至 {email}",
+    "verifyCode": "验证代码",
+    "verifying": "验证中...",
+    "backToEmail": "← 返回电子邮件",
+    "termsAndPrivacy": "登录即表示您同意我们的服务条款和隐私政策。",
+    "termsOfService": "服务条款",
+    "privacyPolicy": "隐私政策"
+  },
+  "chat": {
+    "welcome": "欢迎使用 DocsBridge！",
+    "welcomeDescription": "我可以帮助您了解政府政策、补贴和服务。",
+    "freeQueryRemaining": "登录前您还有 1 次免费查询。",
+    "typeOrVoice": "您可以输入问题、使用语音或选择下面的主题开始。",
+    "messagePlaceholder": "向 DocsBridge 发送消息...",
+    "aiDisclaimer": "AI 可能会出错。请通过官方来源验证重要信息。",
+    "newChat": "新建聊天",
+    "attachFile": "附加文件",
+    "useVoice": "使用语音输入",
+    "stopRecording": "停止录音",
+    "listening": "正在聆听...",
+    "playResponse": "播放回复",
+    "stopPlaying": "停止播放",
+    "sendMessage": "发送消息",
+    "signInToStartChat": "登录以开始新聊天",
+    "signInToSaveHistory": "登录以保存聊天记录并访问更多功能。",
+    "signInToGetResponse": "请登录以获取 AI 回复并继续对话。",
+    "topics": {
+      "healthcare": "医疗补贴",
+      "cashAid": "现金援助 (STR)",
+      "education": "教育支持",
+      "housing": "住房援助"
+    }
+  },
+  "sidebar": {
+    "menu": "菜单",
+    "newChat": "新建聊天",
+    "search": "搜索",
+    "knowledgeBase": "知识库",
+    "officialGovDocs": "官方政府文档",
+    "manageKnowledge": "管理知识",
+    "today": "今天",
+    "previous7Days": "过去 7 天",
+    "older": "更早",
+    "userProfile": "用户资料",
+    "freePlan": "免费计划",
+    "proPlan": "专业计划",
+    "businessPlan": "商业计划",
+    "proFeature": "专业版",
+    "confirmDeleteConversation": "确定要删除此对话吗？此操作无法撤消。"
+  },
+  "settings": {
+    "title": "设置",
+    "tabs": {
+      "account": "账户",
+      "plan": "计划与订阅",
+      "notifications": "通知",
+      "usage": "使用情况"
+    },
+    "account": {
+      "title": "账户资料",
+      "fullName": "全名",
+      "fullNamePlaceholder": "DocsBridge 用户",
+      "emailAddress": "电子邮件地址",
+      "languagePreference": "语言偏好",
+      "fontSize": "字体大小",
+      "theme": "主题",
+      "light": "浅色",
+      "dark": "深色",
+      "signOut": "退出登录",
+      "saveSuccess": "更改已成功保存！",
+      "fontSizes": {
+        "small": "小",
+        "medium": "中（默认）",
+        "large": "大",
+        "extraLarge": "特大"
+      },
+      "languages": {
+        "en": "English (EN)",
+        "ms": "Bahasa Melayu (BM)",
+        "zh": "中文",
+        "ta": "தமிழ்",
+        "tl": "Tagalog (TL)",
+        "id": "Bahasa Indonesia (ID)"
+      }
+    },
+    "plan": {
+      "title": "计划与订阅",
+      "currentPlan": "当前计划",
+      "recommended": "推荐",
+      "free": {
+        "name": "免费计划",
+        "price": "RM 0",
+        "period": "/月",
+        "description": "公民了解政府服务的基本访问权限。",
+        "features": {
+          "assistant": "DocsBridge 政府助手",
+          "knowledgeBase": "官方知识库访问",
+          "messageLimits": "标准消息限制"
+        }
+      },
+      "pro": {
+        "name": "专业计划",
+        "price": "RM 20",
+        "period": "/月",
+        "description": "为高级用户和专业人士提供的高级功能。",
+        "features": {
+          "everything": "免费计划的所有功能",
+          "uploadDocs": "上传私人文档",
+          "personalKB": "创建个人知识库",
+          "higherLimits": "更高的 AI 消息限制"
+        }
+      },
+      "business": {
+        "name": "商业计划",
+        "price": "定制",
+        "description": "适用于机构、组织和团队协作。",
+        "features": {
+          "everything": "专业计划的所有功能",
+          "aiAgents": "创建 AI 代理",
+          "teamWorkspace": "团队工作区和共享",
+          "prioritySupport": "专属优先支持"
+        }
+      },
+      "currentlyActive": "当前激活",
+      "upgradeToPro": "升级到专业版",
+      "contactUs": "联系我们",
+      "upgradeSuccess": "计划升级成功！"
+    },
+    "notifications": {
+      "title": "通知设置",
+      "soundNotifications": "声音通知",
+      "soundDescription": "AI 完成回复时播放声音",
+      "notificationSound": "通知声音",
+      "testSound": "测试声音",
+      "aboutNotifications": "关于通知",
+      "aboutDescription": "声音通知帮助您知道 AI 何时完成生成回复，在您多任务处理或标签页在后台时特别有用。",
+      "sounds": {
+        "default": "默认",
+        "chime": "钟声",
+        "bell": "铃声",
+        "ding": "叮",
+        "pop": "啵"
+      }
+    },
+    "usage": {
+      "title": "使用摘要",
+      "aiMessageLimit": "AI 消息限制",
+      "cycleResets": "周期在 {days} 天后重置",
+      "messagesUsed": "已使用消息",
+      "tokensUsed": "已使用令牌",
+      "tokensDescription": "本周期消耗的总令牌",
+      "noData": "无可用使用数据",
+      "approachingLimit": "您即将达到免费限制。{upgradeLink} 以增加容量。",
+      "approachingLimitSimple": "您即将达到免费限制。",
+      "upgradeToPro": "升级到专业版",
+      "toIncreaseCapacity": "以增加容量。"
+    }
+  },
+  "header": {
+    "archive": "存档",
+    "categories": "类别",
+    "delete": "删除"
+  },
+  "errors": {
+    "uploadFileFailed": "上传文件失败",
+    "deleteAttachmentFailed": "删除附件失败",
+    "deleteDocumentFailed": "删除文档失败",
+    "deleteFolderFailed": "删除文件夹失败",
+    "editFolderFailed": "编辑文件夹失败",
+    "editDocumentFailed": "编辑文档失败",
+    "cannotEditSystemFolder": "无法编辑系统文件夹",
+    "systemFoldersCannotBeModified": "系统文件夹无法修改",
+    "noSpeechDetected": "未检测到语音。请重试。",
+    "microphoneAccessDenied": "麦克风访问被拒绝。请在浏览器设置中允许麦克风访问。",
+    "networkError": "网络错误。请检查您的互联网连接。"
+  },
+  "success": {
+    "documentLoadedFromChat": "已从聊天源加载文档"
+  },
+  "chatInterface": {
+    "stopPlaying": "停止播放",
+    "playResponse": "播放回复",
+    "showOriginal": "显示原文",
+    "translateTo": "翻译为 {dialect}",
+    "translating": "翻译中...",
+    "simplifying": "简化中...",
+    "simplifyProfessionalWords": "简化专业词汇",
+    "summarizing": "总结中...",
+    "summarizeOverall": "总体总结",
+    "summarizeInPointForm": "要点总结",
+    "voiceWarning": "此语言的语音包不可用",
+    "voiceWarningDescription": "要获得更好的语音质量，请在系统设置中安装语言语音包。",
+    "howToInstallVoicePacks": "如何安装语音包",
+    "windowsInstructions": "Windows：设置 → 时间和语言 → 语音 → 添加语音",
+    "macosInstructions": "macOS：系统偏好设置 → 辅助功能 → 朗读内容 → 管理语音",
+    "mobileInstructions": "Android/iOS：通常已预装，请检查系统语言设置",
+    "readabilityGrade": "可读性：等级 {grade}",
+    "originalGrade": "原文：等级 {grade}",
+    "percentEasier": "简化 {percent}%",
+    "simplified": "已简化",
+    "hoverTip": "💡 提示：将鼠标悬停在带下划线的词上查看解释",
+    "translationQuality": "翻译质量",
+    "confidence": "置信度：{percent}%",
+    "lowConfidenceWarning": "⚠️ 置信度低 - 翻译可能不完全准确",
+    "highConfidence": "✓ 高",
+    "mediumConfidence": "~ 中",
+    "lowConfidence": "! 低",
+    "keyPoints": "要点：",
+    "actionsToTake": "需要采取的行动：",
+    "reducedWords": "📊 从 {original} 词减少到 {summary} 词（缩短 {reduction}%）",
+    "confidenceLevel": "置信度：{percent}% ({level})",
+    "sources": "📚 来源 ({count})",
+    "viewExternalSource": "查看外部来源 →",
+    "clickToViewInKB": "📄 点击在知识库中查看 →",
+    "thinking": "思考中..."
+  },
+  "chatPage": {
+    "docsBridgeAI": "DocsBridge AI",
+    "docsBridgePlus": "DocsBridge Plus",
+    "fasterResponses": "更快的响应，适合快速查询",
+    "bestAccuracy": "复杂问题的最佳准确性"
+  },
+  "knowledgeBaseInterface": {
+    "noDocumentSelected": "未选择文档",
+    "createFirstDocument": "创建您的第一个文档",
+    "selectOrCreate": "创建新文档或从侧边栏选择",
+    "createFolderFirst": "先创建文件夹来组织您的文档",
+    "retry": "重试",
+    "createYourFirstDocument": "创建您的第一个文档"
+  },
+  "common": {
+    "save": "保存更改",
+    "saving": "保存中...",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "active": "激活",
+    "guest": "访客",
+    "notSignedIn": "未登录"
   }
 }

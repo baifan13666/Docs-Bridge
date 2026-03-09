@@ -23,6 +23,296 @@
     "language": "மொழி"
   },
   "knowledgeBase": {
-    "readOnly": "இந்த ஆவணம் படிக்க மட்டுமே"
+    "readOnly": "இந்த ஆவணம் படிக்க மட்டுமே",
+    "title": "அறிவுத் தளம்",
+    "subtitle": "கோப்புறைகள் & ஆவணங்கள்",
+    "folders": "கோப்புறைகள்",
+    "newFolder": "புதிய கோப்புறை",
+    "folderNamePlaceholder": "கோப்புறை பெயர்",
+    "newDocument": "புதிய ஆவணம்",
+    "documents": "ஆவணம்",
+    "documentsPlural": "ஆவணங்கள்",
+    "noDocumentSelected": "எந்த ஆவணமும் தேர்ந்தெடுக்கப்படவில்லை",
+    "createFirstDocument": "உங்கள் முதல் ஆவணத்தை உருவாக்குங்கள்",
+    "selectOrCreate": "புதிய ஆவணத்தை உருவாக்கவும் அல்லது பக்கப்பட்டியிலிருந்து தேர்ந்தெடுக்கவும்",
+    "createFolderFirst": "உங்கள் ஆவணங்களை ஒழுங்கமைக்க முதலில் ஒரு கோப்புறையை உருவாக்கவும்",
+    "untitled": "தலைப்பு இல்லை",
+    "startWriting": "எழுதத் தொடங்குங்கள்...",
+    "changeIcon": "ஐகானை மாற்று",
+    "hideSidebar": "பக்கப்பட்டியை மறை",
+    "showSidebar": "பக்கப்பட்டியைக் காட்டு",
+    "edited": "திருத்தப்பட்டது {date}",
+    "deleteDocument": "இந்த ஆவணத்தை நீக்கவா?",
+    "deleteFolder": "\"{name}\" கோப்புறை மற்றும் அதன் அனைத்து ஆவணங்களையும் நீக்கவா?",
+    "attachments": "இணைப்புகள் ({count})",
+    "removeAttachment": "இணைப்பை அகற்று",
+    "downloadAttachment": "பதிவிறக்கு",
+    "uploadFile": "கோப்பைப் பதிவேற்று",
+    "toolbar": {
+      "bold": "தடித்த (Ctrl+B)",
+      "italic": "சாய்வு (Ctrl+I)",
+      "underline": "அடிக்கோடு (Ctrl+U)",
+      "strikethrough": "குறுக்குக் கோடு",
+      "heading1": "தலைப்பு 1",
+      "heading2": "தலைப்பு 2",
+      "heading3": "தலைப்பு 3",
+      "bulletList": "புள்ளி பட்டியல்",
+      "numberedList": "எண் பட்டியல்"
+    }
+  },
+  "auth": {
+    "signIn": "DocsBridge இல் உள்நுழைக",
+    "signInDescription": "அரசாங்க தரவை பாதுகாப்பாக அணுகவும்",
+    "freeQueryUsed": "நீங்கள் உங்கள் இலவச வினவலைப் பயன்படுத்திவிட்டீர்கள்.",
+    "signInToContinue": "பதிலைப் பார்க்கவும் உரையாடலைத் தொடரவும் உள்நுழையவும்.",
+    "continueWithGoogle": "Google உடன் தொடரவும்",
+    "orSignInWithEmail": "அல்லது மின்னஞ்சல் மூலம் உள்நுழையவும்",
+    "emailAddress": "மின்னஞ்சல் முகவரி",
+    "emailPlaceholder": "your@email.com",
+    "sendLoginCode": "உள்நுழைவு குறியீட்டை அனுப்பு",
+    "sending": "அனுப்புகிறது...",
+    "checkEmail": "6 இலக்க குறியீட்டிற்கு உங்கள் மின்னஞ்சலைச் சரிபார்க்கவும்!",
+    "successfullySignedIn": "வெற்றிகரமாக உள்நுழைந்தீர்கள்!",
+    "enterCode": "6 இலக்க குறியீட்டை உள்ளிடவும்",
+    "codePlaceholder": "000000",
+    "sentTo": "{email} க்கு அனுப்பப்பட்டது",
+    "verifyCode": "குறியீட்டைச் சரிபார்",
+    "verifying": "சரிபார்க்கிறது...",
+    "backToEmail": "← மின்னஞ்சலுக்குத் திரும்பு",
+    "termsAndPrivacy": "உள்நுழைவதன் மூலம், எங்கள் சேவை விதிமுறைகள் மற்றும் தனியுரிமைக் கொள்கையை ஏற்கிறீர்கள்.",
+    "termsOfService": "சேவை விதிமுறைகள்",
+    "privacyPolicy": "தனியுரிமைக் கொள்கை"
+  },
+  "chat": {
+    "welcome": "DocsBridge க்கு வரவேற்கிறோம்!",
+    "welcomeDescription": "அரசாங்கக் கொள்கைகள், மானியங்கள் மற்றும் சேவைகளைப் புரிந்துகொள்ள நான் உங்களுக்கு உதவ முடியும்.",
+    "freeQueryRemaining": "உள்நுழைவு தேவைப்படுவதற்கு முன் உங்களுக்கு 1 இலவச வினவல் உள்ளது.",
+    "typeOrVoice": "நீங்கள் உங்கள் கேள்வியை தட்டச்சு செய்யலாம், குரலைப் பயன்படுத்தலாம் அல்லது தொடங்க கீழே உள்ள தலைப்பைத் தேர்ந்தெடுக்கலாம்.",
+    "messagePlaceholder": "DocsBridge க்கு செய்தி...",
+    "aiDisclaimer": "AI தவறுகள் செய்யலாம். முக்கியமான தகவலை அதிகாரப்பூர்வ ஆதாரங்களுடன் சரிபார்க்கவும்.",
+    "newChat": "புதிய அரட்டை",
+    "attachFile": "கோப்பை இணை",
+    "useVoice": "குரல் உள்ளீட்டைப் பயன்படுத்து",
+    "stopRecording": "பதிவை நிறுத்து",
+    "listening": "கேட்கிறது...",
+    "playResponse": "பதிலை இயக்கு",
+    "stopPlaying": "இயக்குவதை நிறுத்து",
+    "sendMessage": "செய்தியை அனுப்பு",
+    "signInToStartChat": "புதிய அரட்டையைத் தொடங்க உள்நுழையவும்",
+    "signInToSaveHistory": "உங்கள் அரட்டை வரலாற்றைச் சேமிக்கவும் மேலும் அம்சங்களை அணுகவும் உள்நுழையவும்.",
+    "signInToGetResponse": "AI பதில்களைப் பெறவும் உரையாடலைத் தொடரவும் உள்நுழையவும்.",
+    "topics": {
+      "healthcare": "சுகாதார மானியங்கள்",
+      "cashAid": "பண உதவி (STR)",
+      "education": "கல்வி ஆதரவு",
+      "housing": "வீட்டு உதவி"
+    }
+  },
+  "sidebar": {
+    "menu": "பட்டி",
+    "newChat": "புதிய அரட்டை",
+    "search": "தேடு",
+    "knowledgeBase": "அறிவுத் தளம்",
+    "officialGovDocs": "அதிகாரப்பூர்வ அரசாங்க ஆவணங்கள்",
+    "manageKnowledge": "அறிவை நிர்வகி",
+    "today": "இன்று",
+    "previous7Days": "முந்தைய 7 நாட்கள்",
+    "older": "பழையது",
+    "userProfile": "பயனர் சுயவிவரம்",
+    "freePlan": "இலவசத் திட்டம்",
+    "proPlan": "தொழில்முறைத் திட்டம்",
+    "businessPlan": "வணிகத் திட்டம்",
+    "proFeature": "PRO",
+    "confirmDeleteConversation": "இந்த உரையாடலை நீக்க விரும்புகிறீர்களா? இந்தச் செயலை மாற்ற முடியாது."
+  },
+  "settings": {
+    "title": "அமைப்புகள்",
+    "tabs": {
+      "account": "கணக்கு",
+      "plan": "திட்டம் & சந்தா",
+      "notifications": "அறிவிப்புகள்",
+      "usage": "பயன்பாடு"
+    },
+    "account": {
+      "title": "கணக்கு சுயவிவரம்",
+      "fullName": "முழு பெயர்",
+      "fullNamePlaceholder": "DocsBridge பயனர்",
+      "emailAddress": "மின்னஞ்சல் முகவரி",
+      "languagePreference": "மொழி விருப்பம்",
+      "fontSize": "எழுத்துரு அளவு",
+      "theme": "தீம்",
+      "light": "வெளிச்சம்",
+      "dark": "இருள்",
+      "signOut": "வெளியேறு",
+      "saveSuccess": "மாற்றங்கள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!",
+      "fontSizes": {
+        "small": "சிறிய",
+        "medium": "நடுத்தர (இயல்புநிலை)",
+        "large": "பெரிய",
+        "extraLarge": "மிகப் பெரிய"
+      },
+      "languages": {
+        "en": "English (EN)",
+        "ms": "Bahasa Melayu (BM)",
+        "zh": "中文",
+        "ta": "தமிழ்",
+        "tl": "Tagalog (TL)",
+        "id": "Bahasa Indonesia (ID)"
+      }
+    },
+    "plan": {
+      "title": "திட்டம் & சந்தா",
+      "currentPlan": "தற்போதைய திட்டம்",
+      "recommended": "பரிந்துரைக்கப்பட்டது",
+      "free": {
+        "name": "இலவசத் திட்டம்",
+        "price": "RM 0",
+        "period": "/மாதம்",
+        "description": "அரசாங்க சேவைகளைப் புரிந்துகொள்ள குடிமக்களுக்கான அடிப்படை அணுகல்.",
+        "features": {
+          "assistant": "DocsBridge அரசாங்க உதவியாளர்",
+          "knowledgeBase": "அதிகாரப்பூர்வ அறிவுத் தள அணுகல்",
+          "messageLimits": "நிலையான செய்தி வரம்புகள்"
+        }
+      },
+      "pro": {
+        "name": "தொழில்முறைத் திட்டம்",
+        "price": "RM 20",
+        "period": "/மாதம்",
+        "description": "சக்தி பயனர்கள் மற்றும் தொழில் வல்லுநர்களுக்கான மேம்பட்ட அம்சங்கள்.",
+        "features": {
+          "everything": "இலவசத் திட்டத்தில் உள்ள அனைத்தும்",
+          "uploadDocs": "தனிப்பட்ட ஆவணங்களைப் பதிவேற்று",
+          "personalKB": "தனிப்பட்ட அறிவுத் தளத்தை உருவாக்கு",
+          "higherLimits": "அதிக AI செய்தி வரம்புகள்"
+        }
+      },
+      "business": {
+        "name": "வணிகத் திட்டம்",
+        "price": "தனிப்பயன்",
+        "description": "நிறுவனங்கள், அமைப்புகள் மற்றும் குழு ஒத்துழைப்புக்கு.",
+        "features": {
+          "everything": "தொழில்முறைத் திட்டத்தில் உள்ள அனைத்தும்",
+          "aiAgents": "AI முகவர்களை உருவாக்கு",
+          "teamWorkspace": "குழு பணியிடம் & பகிர்வு",
+          "prioritySupport": "அர்ப்பணிப்பு முன்னுரிமை ஆதரவு"
+        }
+      },
+      "currentlyActive": "தற்போது செயலில்",
+      "upgradeToPro": "தொழில்முறைக்கு மேம்படுத்து",
+      "contactUs": "எங்களைத் தொடர்பு கொள்ளுங்கள்",
+      "upgradeSuccess": "திட்டம் வெற்றிகரமாக மேம்படுத்தப்பட்டது!"
+    },
+    "notifications": {
+      "title": "அறிவிப்பு அமைப்புகள்",
+      "soundNotifications": "ஒலி அறிவிப்புகள்",
+      "soundDescription": "AI பதிலை முடிக்கும்போது ஒலி இயக்கு",
+      "notificationSound": "அறிவிப்பு ஒலி",
+      "testSound": "ஒலியைச் சோதி",
+      "aboutNotifications": "அறிவிப்புகள் பற்றி",
+      "aboutDescription": "ஒலி அறிவிப்புகள் AI பதிலை உருவாக்கி முடித்தபோது உங்களுக்குத் தெரியப்படுத்த உதவுகின்றன, குறிப்பாக நீங்கள் பல பணிகளைச் செய்யும்போது அல்லது தாவல் பின்னணியில் இருக்கும்போது பயனுள்ளதாக இருக்கும்.",
+      "sounds": {
+        "default": "இயல்புநிலை",
+        "chime": "மணி",
+        "bell": "மணி",
+        "ding": "டிங்",
+        "pop": "பாப்"
+      }
+    },
+    "usage": {
+      "title": "பயன்பாட்டு சுருக்கம்",
+      "aiMessageLimit": "AI செய்தி வரம்பு",
+      "cycleResets": "சுழற்சி {days} நாட்களில் மீட்டமைக்கப்படும்",
+      "messagesUsed": "பயன்படுத்திய செய்திகள்",
+      "tokensUsed": "பயன்படுத்திய டோக்கன்கள்",
+      "tokensDescription": "இந்த சுழற்சியில் பயன்படுத்தப்பட்ட மொத்த டோக்கன்கள்",
+      "noData": "பயன்பாட்டுத் தரவு இல்லை",
+      "approachingLimit": "நீங்கள் உங்கள் இலவச வரம்பை நெருங்குகிறீர்கள். உங்கள் திறனை அதிகரிக்க {upgradeLink}.",
+      "approachingLimitSimple": "நீங்கள் உங்கள் இலவச வரம்பை நெருங்குகிறீர்கள்.",
+      "upgradeToPro": "தொழில்முறைக்கு மேம்படுத்து",
+      "toIncreaseCapacity": "உங்கள் திறனை அதிகரிக்க."
+    }
+  },
+  "header": {
+    "archive": "காப்பகம்",
+    "categories": "வகைகள்",
+    "delete": "நீக்கு"
+  },
+  "errors": {
+    "uploadFileFailed": "கோப்பைப் பதிவேற்றுவதில் தோல்வி",
+    "deleteAttachmentFailed": "இணைப்பை நீக்குவதில் தோல்வி",
+    "deleteDocumentFailed": "ஆவணத்தை நீக்குவதில் தோல்வி",
+    "deleteFolderFailed": "கோப்புறையை நீக்குவதில் தோல்வி",
+    "editFolderFailed": "கோப்புறையைத் திருத்துவதில் தோல்வி",
+    "editDocumentFailed": "ஆவணத்தைத் திருத்துவதில் தோல்வி",
+    "cannotEditSystemFolder": "கணினி கோப்புறையைத் திருத்த முடியாது",
+    "systemFoldersCannotBeModified": "கணினி கோப்புறைகளை மாற்ற முடியாது",
+    "noSpeechDetected": "பேச்சு கண்டறியப்படவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    "microphoneAccessDenied": "மைக்ரோஃபோன் அணுகல் மறுக்கப்பட்டது. உங்கள் உலாவி அமைப்புகளில் மைக்ரோஃபோன் அணுகலை அனுமதிக்கவும்.",
+    "networkError": "நெட்வொர்க் பிழை. உங்கள் இணைய இணைப்பைச் சரிபார்க்கவும்."
+  },
+  "success": {
+    "documentLoadedFromChat": "அரட்டை மூலத்திலிருந்து ஆவணம் ஏற்றப்பட்டது"
+  },
+  "chatInterface": {
+    "stopPlaying": "இயக்குவதை நிறுத்து",
+    "playResponse": "பதிலை இயக்கு",
+    "showOriginal": "அசலைக் காட்டு",
+    "translateTo": "{dialect} க்கு மொழிபெயர்",
+    "translating": "மொழிபெயர்க்கிறது...",
+    "simplifying": "எளிமைப்படுத்துகிறது...",
+    "simplifyProfessionalWords": "தொழில்முறை சொற்களை எளிமைப்படுத்து",
+    "summarizing": "சுருக்குகிறது...",
+    "summarizeOverall": "ஒட்டுமொத்த சுருக்கம்",
+    "summarizeInPointForm": "புள்ளி வடிவில் சுருக்கு",
+    "voiceWarning": "இந்த மொழிக்கான குரல் தொகுப்பு கிடைக்கவில்லை",
+    "voiceWarningDescription": "சிறந்த குரல் தரத்தைப் பெற, உங்கள் கணினி அமைப்புகளில் மொழி குரல் தொகுப்பை நிறுவவும்.",
+    "howToInstallVoicePacks": "குரல் தொகுப்புகளை எவ்வாறு நிறுவுவது",
+    "windowsInstructions": "Windows: அமைப்புகள் → நேரம் & மொழி → பேச்சு → குரல்களைச் சேர்",
+    "macosInstructions": "macOS: கணினி விருப்பத்தேர்வுகள் → அணுகல்தன்மை → பேசப்பட்ட உள்ளடக்கம் → குரல்களை நிர்வகி",
+    "mobileInstructions": "Android/iOS: பொதுவாக முன்பே நிறுவப்பட்டுள்ளது, கணினி மொழி அமைப்புகளைச் சரிபார்க்கவும்",
+    "readabilityGrade": "படிக்கக்கூடிய தன்மை: தரம் {grade}",
+    "originalGrade": "அசல்: தரம் {grade}",
+    "percentEasier": "{percent}% எளிதானது",
+    "simplified": "எளிமைப்படுத்தப்பட்டது",
+    "hoverTip": "💡 குறிப்பு: விளக்கங்களைக் காண அடிக்கோடிடப்பட்ட சொற்களின் மீது சுட்டியை வைக்கவும்",
+    "translationQuality": "மொழிபெயர்ப்பு தரம்",
+    "confidence": "நம்பிக்கை: {percent}%",
+    "lowConfidenceWarning": "⚠️ குறைந்த நம்பிக்கை - மொழிபெயர்ப்பு முழுமையாக துல்லியமாக இல்லாமல் இருக்கலாம்",
+    "highConfidence": "✓ உயர்",
+    "mediumConfidence": "~ நடுத்தர",
+    "lowConfidence": "! குறைந்த",
+    "keyPoints": "முக்கிய புள்ளிகள்:",
+    "actionsToTake": "எடுக்க வேண்டிய நடவடிக்கைகள்:",
+    "reducedWords": "📊 {original} சொற்களிலிருந்து {summary} சொற்களாகக் குறைக்கப்பட்டது ({reduction}% குறுகியது)",
+    "confidenceLevel": "நம்பிக்கை: {percent}% ({level})",
+    "sources": "📚 ஆதாரங்கள் ({count})",
+    "viewExternalSource": "வெளிப்புற ஆதாரத்தைக் காண்க →",
+    "clickToViewInKB": "📄 KB இல் பார்க்க கிளிக் செய்க →",
+    "thinking": "சிந்திக்கிறது..."
+  },
+  "chatPage": {
+    "docsBridgeAI": "DocsBridge AI",
+    "docsBridgePlus": "DocsBridge Plus",
+    "fasterResponses": "விரைவான பதில்கள், விரைவான வினவல்களுக்கு சிறந்தது",
+    "bestAccuracy": "சிக்கலான கேள்விகளுக்கு சிறந்த துல்லியம்"
+  },
+  "knowledgeBaseInterface": {
+    "noDocumentSelected": "எந்த ஆவணமும் தேர்ந்தெடுக்கப்படவில்லை",
+    "createFirstDocument": "உங்கள் முதல் ஆவணத்தை உருவாக்குங்கள்",
+    "selectOrCreate": "புதிய ஆவணத்தை உருவாக்கவும் அல்லது பக்கப்பட்டியிலிருந்து தேர்ந்தெடுக்கவும்",
+    "createFolderFirst": "உங்கள் ஆவணங்களை ஒழுங்கமைக்க முதலில் ஒரு கோப்புறையை உருவாக்கவும்",
+    "retry": "மீண்டும் முயற்சி",
+    "createYourFirstDocument": "உங்கள் முதல் ஆவணத்தை உருவாக்குங்கள்"
+  },
+  "common": {
+    "save": "மாற்றங்களைச் சேமி",
+    "saving": "சேமிக்கிறது...",
+    "delete": "நீக்கு",
+    "edit": "திருத்து",
+    "create": "உருவாக்கு",
+    "active": "செயலில்",
+    "guest": "விருந்தினர்",
+    "notSignedIn": "உள்நுழையவில்லை"
   }
 }

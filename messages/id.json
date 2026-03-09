@@ -23,6 +23,296 @@
     "language": "Bahasa"
   },
   "knowledgeBase": {
-    "readOnly": "Dokumen ini hanya dapat dibaca"
+    "readOnly": "Dokumen ini hanya dapat dibaca",
+    "title": "Basis Pengetahuan",
+    "subtitle": "Folder & Dokumen",
+    "folders": "Folder",
+    "newFolder": "Folder baru",
+    "folderNamePlaceholder": "Nama folder",
+    "newDocument": "Dokumen Baru",
+    "documents": "dokumen",
+    "documentsPlural": "dokumen",
+    "noDocumentSelected": "Tidak ada dokumen yang dipilih",
+    "createFirstDocument": "Buat dokumen pertama Anda",
+    "selectOrCreate": "Buat dokumen baru atau pilih dari sidebar",
+    "createFolderFirst": "Buat folder terlebih dahulu untuk mengatur dokumen Anda",
+    "untitled": "Tanpa Judul",
+    "startWriting": "Mulai menulis...",
+    "changeIcon": "Ubah ikon",
+    "hideSidebar": "Sembunyikan sidebar",
+    "showSidebar": "Tampilkan sidebar",
+    "edited": "Diedit {date}",
+    "deleteDocument": "Hapus dokumen ini?",
+    "deleteFolder": "Hapus folder \"{name}\" dan semua dokumennya?",
+    "attachments": "Lampiran ({count})",
+    "removeAttachment": "Hapus lampiran",
+    "downloadAttachment": "Unduh",
+    "uploadFile": "Unggah file",
+    "toolbar": {
+      "bold": "Tebal (Ctrl+B)",
+      "italic": "Miring (Ctrl+I)",
+      "underline": "Garis bawah (Ctrl+U)",
+      "strikethrough": "Coret",
+      "heading1": "Judul 1",
+      "heading2": "Judul 2",
+      "heading3": "Judul 3",
+      "bulletList": "Daftar poin",
+      "numberedList": "Daftar bernomor"
+    }
+  },
+  "auth": {
+    "signIn": "Masuk ke DocsBridge",
+    "signInDescription": "Akses data pemerintah resmi dengan aman",
+    "freeQueryUsed": "Anda telah menggunakan kueri gratis Anda.",
+    "signInToContinue": "Silakan masuk untuk melihat jawaban dan melanjutkan obrolan Anda.",
+    "continueWithGoogle": "Lanjutkan dengan Google",
+    "orSignInWithEmail": "Atau masuk dengan email",
+    "emailAddress": "Alamat Email",
+    "emailPlaceholder": "email@anda.com",
+    "sendLoginCode": "Kirim Kode Login",
+    "sending": "Mengirim...",
+    "checkEmail": "Periksa email Anda untuk kode 6 digit!",
+    "successfullySignedIn": "Berhasil masuk!",
+    "enterCode": "Masukkan Kode 6 Digit",
+    "codePlaceholder": "000000",
+    "sentTo": "Dikirim ke {email}",
+    "verifyCode": "Verifikasi Kode",
+    "verifying": "Memverifikasi...",
+    "backToEmail": "← Kembali ke email",
+    "termsAndPrivacy": "Dengan masuk, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi kami.",
+    "termsOfService": "Ketentuan Layanan",
+    "privacyPolicy": "Kebijakan Privasi"
+  },
+  "chat": {
+    "welcome": "Selamat datang di DocsBridge!",
+    "welcomeDescription": "Saya dapat membantu Anda memahami kebijakan, subsidi, dan layanan pemerintah.",
+    "freeQueryRemaining": "Anda memiliki 1 kueri gratis tersisa sebelum masuk diperlukan.",
+    "typeOrVoice": "Anda dapat mengetik pertanyaan, menggunakan suara, atau memilih topik di bawah untuk memulai.",
+    "messagePlaceholder": "Pesan DocsBridge...",
+    "aiDisclaimer": "AI dapat membuat kesalahan. Harap verifikasi informasi penting dengan sumber resmi.",
+    "newChat": "Obrolan Baru",
+    "attachFile": "Lampirkan file",
+    "useVoice": "Gunakan input suara",
+    "stopRecording": "Hentikan perekaman",
+    "listening": "Mendengarkan...",
+    "playResponse": "Putar respons",
+    "stopPlaying": "Hentikan pemutaran",
+    "sendMessage": "Kirim pesan",
+    "signInToStartChat": "Masuk untuk memulai obrolan baru",
+    "signInToSaveHistory": "Masuk untuk menyimpan riwayat obrolan dan mengakses lebih banyak fitur.",
+    "signInToGetResponse": "Silakan masuk untuk mendapatkan respons AI dan melanjutkan percakapan.",
+    "topics": {
+      "healthcare": "Subsidi kesehatan",
+      "cashAid": "Bantuan tunai (STR)",
+      "education": "Dukungan pendidikan",
+      "housing": "Bantuan perumahan"
+    }
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "newChat": "Obrolan Baru",
+    "search": "Cari",
+    "knowledgeBase": "Basis Pengetahuan",
+    "officialGovDocs": "Dokumen Pemerintah Resmi",
+    "manageKnowledge": "Kelola Pengetahuan",
+    "today": "Hari Ini",
+    "previous7Days": "7 Hari Terakhir",
+    "older": "Lebih Lama",
+    "userProfile": "Profil Pengguna",
+    "freePlan": "Paket Gratis",
+    "proPlan": "Paket Pro",
+    "businessPlan": "Paket Bisnis",
+    "proFeature": "PRO",
+    "confirmDeleteConversation": "Apakah Anda yakin ingin menghapus percakapan ini? Tindakan ini tidak dapat dibatalkan."
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "tabs": {
+      "account": "Akun",
+      "plan": "Paket & Langganan",
+      "notifications": "Notifikasi",
+      "usage": "Penggunaan"
+    },
+    "account": {
+      "title": "Profil Akun",
+      "fullName": "Nama Lengkap",
+      "fullNamePlaceholder": "Pengguna DocsBridge",
+      "emailAddress": "Alamat Email",
+      "languagePreference": "Preferensi Bahasa",
+      "fontSize": "Ukuran Font",
+      "theme": "Tema",
+      "light": "Terang",
+      "dark": "Gelap",
+      "signOut": "Keluar",
+      "saveSuccess": "Perubahan berhasil disimpan!",
+      "fontSizes": {
+        "small": "Kecil",
+        "medium": "Sedang (Default)",
+        "large": "Besar",
+        "extraLarge": "Sangat Besar"
+      },
+      "languages": {
+        "en": "English (EN)",
+        "ms": "Bahasa Melayu (BM)",
+        "zh": "中文",
+        "ta": "தமிழ்",
+        "tl": "Tagalog (TL)",
+        "id": "Bahasa Indonesia (ID)"
+      }
+    },
+    "plan": {
+      "title": "Paket & Langganan",
+      "currentPlan": "PAKET SAAT INI",
+      "recommended": "DIREKOMENDASIKAN",
+      "free": {
+        "name": "Paket Gratis",
+        "price": "RM 0",
+        "period": "/bulan",
+        "description": "Akses dasar untuk warga memahami layanan pemerintah.",
+        "features": {
+          "assistant": "Asisten Pemerintah DocsBridge",
+          "knowledgeBase": "Akses Basis Pengetahuan Resmi",
+          "messageLimits": "Batas pesan standar"
+        }
+      },
+      "pro": {
+        "name": "Paket Pro",
+        "price": "RM 20",
+        "period": "/bulan",
+        "description": "Fitur lanjutan untuk pengguna power dan profesional.",
+        "features": {
+          "everything": "Semua di Paket Gratis",
+          "uploadDocs": "Unggah dokumen pribadi",
+          "personalKB": "Buat basis pengetahuan pribadi",
+          "higherLimits": "Batas pesan AI lebih tinggi"
+        }
+      },
+      "business": {
+        "name": "Paket Bisnis",
+        "price": "Kustom",
+        "description": "Untuk agensi, organisasi, dan kolaborasi tim.",
+        "features": {
+          "everything": "Semua di Paket Pro",
+          "aiAgents": "Buat agen AI",
+          "teamWorkspace": "Ruang kerja & berbagi tim",
+          "prioritySupport": "Dukungan prioritas khusus"
+        }
+      },
+      "currentlyActive": "Saat Ini Aktif",
+      "upgradeToPro": "Tingkatkan ke Pro",
+      "contactUs": "Hubungi Kami",
+      "upgradeSuccess": "Paket berhasil ditingkatkan!"
+    },
+    "notifications": {
+      "title": "Pengaturan Notifikasi",
+      "soundNotifications": "Notifikasi Suara",
+      "soundDescription": "Putar suara saat AI menyelesaikan respons",
+      "notificationSound": "Suara Notifikasi",
+      "testSound": "Tes Suara",
+      "aboutNotifications": "Tentang Notifikasi",
+      "aboutDescription": "Notifikasi suara membantu Anda mengetahui kapan AI selesai menghasilkan respons, terutama berguna saat Anda multitasking atau tab berada di latar belakang.",
+      "sounds": {
+        "default": "Default",
+        "chime": "Lonceng",
+        "bell": "Bel",
+        "ding": "Ding",
+        "pop": "Pop"
+      }
+    },
+    "usage": {
+      "title": "Ringkasan Penggunaan",
+      "aiMessageLimit": "Batas Pesan AI",
+      "cycleResets": "Siklus direset dalam {days} hari",
+      "messagesUsed": "Pesan Digunakan",
+      "tokensUsed": "Token Digunakan",
+      "tokensDescription": "Total token yang dikonsumsi siklus ini",
+      "noData": "Tidak ada data penggunaan tersedia",
+      "approachingLimit": "Anda mendekati batas gratis. {upgradeLink} untuk meningkatkan kapasitas Anda.",
+      "approachingLimitSimple": "Anda mendekati batas gratis.",
+      "upgradeToPro": "Tingkatkan ke Pro",
+      "toIncreaseCapacity": "untuk meningkatkan kapasitas Anda."
+    }
+  },
+  "header": {
+    "archive": "Arsip",
+    "categories": "Kategori",
+    "delete": "Hapus"
+  },
+  "errors": {
+    "uploadFileFailed": "Gagal mengunggah file",
+    "deleteAttachmentFailed": "Gagal menghapus lampiran",
+    "deleteDocumentFailed": "Gagal menghapus dokumen",
+    "deleteFolderFailed": "Gagal menghapus folder",
+    "editFolderFailed": "Gagal mengedit folder",
+    "editDocumentFailed": "Gagal mengedit dokumen",
+    "cannotEditSystemFolder": "Tidak dapat mengedit folder sistem",
+    "systemFoldersCannotBeModified": "Folder sistem tidak dapat dimodifikasi",
+    "noSpeechDetected": "Tidak ada ucapan terdeteksi. Silakan coba lagi.",
+    "microphoneAccessDenied": "Akses mikrofon ditolak. Harap izinkan akses mikrofon di pengaturan browser Anda.",
+    "networkError": "Kesalahan jaringan. Harap periksa koneksi internet Anda."
+  },
+  "success": {
+    "documentLoadedFromChat": "Dokumen dimuat dari sumber obrolan"
+  },
+  "chatInterface": {
+    "stopPlaying": "Hentikan Pemutaran",
+    "playResponse": "Putar Respons",
+    "showOriginal": "Tampilkan Asli",
+    "translateTo": "Terjemahkan ke {dialect}",
+    "translating": "Menerjemahkan...",
+    "simplifying": "Menyederhanakan...",
+    "simplifyProfessionalWords": "Sederhanakan Kata Profesional",
+    "summarizing": "Meringkas...",
+    "summarizeOverall": "Ringkas Keseluruhan",
+    "summarizeInPointForm": "Ringkas dalam Bentuk Poin",
+    "voiceWarning": "Paket suara tidak tersedia untuk bahasa ini",
+    "voiceWarningDescription": "Untuk mendapatkan kualitas suara yang lebih baik, instal paket suara bahasa di pengaturan sistem Anda.",
+    "howToInstallVoicePacks": "Cara menginstal paket suara",
+    "windowsInstructions": "Windows: Pengaturan → Waktu & Bahasa → Ucapan → Tambah suara",
+    "macosInstructions": "macOS: Preferensi Sistem → Aksesibilitas → Konten Lisan → Kelola Suara",
+    "mobileInstructions": "Android/iOS: Biasanya sudah terinstal, periksa pengaturan bahasa sistem",
+    "readabilityGrade": "Keterbacaan: Kelas {grade}",
+    "originalGrade": "Asli: Kelas {grade}",
+    "percentEasier": "{percent}% lebih mudah",
+    "simplified": "Disederhanakan",
+    "hoverTip": "💡 Tip: Arahkan kursor ke kata yang digarisbawahi untuk melihat penjelasan",
+    "translationQuality": "Kualitas Terjemahan",
+    "confidence": "Kepercayaan: {percent}%",
+    "lowConfidenceWarning": "⚠️ Kepercayaan rendah - terjemahan mungkin tidak sepenuhnya akurat",
+    "highConfidence": "✓ Tinggi",
+    "mediumConfidence": "~ Sedang",
+    "lowConfidence": "! Rendah",
+    "keyPoints": "Poin Kunci:",
+    "actionsToTake": "Tindakan yang Harus Diambil:",
+    "reducedWords": "📊 Dikurangi dari {original} menjadi {summary} kata ({reduction}% lebih pendek)",
+    "confidenceLevel": "Kepercayaan: {percent}% ({level})",
+    "sources": "📚 Sumber ({count})",
+    "viewExternalSource": "Lihat sumber eksternal →",
+    "clickToViewInKB": "📄 Klik untuk melihat di KB →",
+    "thinking": "Berpikir..."
+  },
+  "chatPage": {
+    "docsBridgeAI": "DocsBridge AI",
+    "docsBridgePlus": "DocsBridge Plus",
+    "fasterResponses": "Respons lebih cepat, bagus untuk kueri cepat",
+    "bestAccuracy": "Akurasi terbaik untuk pertanyaan kompleks"
+  },
+  "knowledgeBaseInterface": {
+    "noDocumentSelected": "Tidak ada dokumen yang dipilih",
+    "createFirstDocument": "Buat dokumen pertama Anda",
+    "selectOrCreate": "Buat dokumen baru atau pilih dari sidebar",
+    "createFolderFirst": "Buat folder terlebih dahulu untuk mengatur dokumen Anda",
+    "retry": "Coba Lagi",
+    "createYourFirstDocument": "Buat dokumen pertama Anda"
+  },
+  "common": {
+    "save": "Simpan Perubahan",
+    "saving": "Menyimpan...",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "create": "Buat",
+    "active": "Aktif",
+    "guest": "Tamu",
+    "notSignedIn": "Belum Masuk"
   }
 }

@@ -23,6 +23,296 @@
     "language": "Wika"
   },
   "knowledgeBase": {
-    "readOnly": "Ang dokumentong ito ay basahin lamang"
+    "readOnly": "Ang dokumentong ito ay basahin lamang",
+    "title": "Base ng Kaalaman",
+    "subtitle": "Mga Folder at Dokumento",
+    "folders": "Mga Folder",
+    "newFolder": "Bagong folder",
+    "folderNamePlaceholder": "Pangalan ng folder",
+    "newDocument": "Bagong Dokumento",
+    "documents": "dokumento",
+    "documentsPlural": "mga dokumento",
+    "noDocumentSelected": "Walang napiling dokumento",
+    "createFirstDocument": "Lumikha ng iyong unang dokumento",
+    "selectOrCreate": "Lumikha ng bagong dokumento o pumili mula sa sidebar",
+    "createFolderFirst": "Lumikha muna ng folder upang ayusin ang iyong mga dokumento",
+    "untitled": "Walang Pamagat",
+    "startWriting": "Magsimulang sumulat...",
+    "changeIcon": "Baguhin ang icon",
+    "hideSidebar": "Itago ang sidebar",
+    "showSidebar": "Ipakita ang sidebar",
+    "edited": "Na-edit {date}",
+    "deleteDocument": "Tanggalin ang dokumentong ito?",
+    "deleteFolder": "Tanggalin ang folder na \"{name}\" at lahat ng mga dokumento nito?",
+    "attachments": "Mga Attachment ({count})",
+    "removeAttachment": "Alisin ang attachment",
+    "downloadAttachment": "I-download",
+    "uploadFile": "Mag-upload ng file",
+    "toolbar": {
+      "bold": "Bold (Ctrl+B)",
+      "italic": "Italic (Ctrl+I)",
+      "underline": "Underline (Ctrl+U)",
+      "strikethrough": "Strikethrough",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bullet list",
+      "numberedList": "Numbered list"
+    }
+  },
+  "auth": {
+    "signIn": "Mag-sign in sa DocsBridge",
+    "signInDescription": "Ligtas na ma-access ang opisyal na datos ng gobyerno",
+    "freeQueryUsed": "Nagamit mo na ang iyong libreng query.",
+    "signInToContinue": "Mangyaring mag-sign in upang makita ang sagot at ipagpatuloy ang iyong chat.",
+    "continueWithGoogle": "Magpatuloy gamit ang Google",
+    "orSignInWithEmail": "O mag-sign in gamit ang email",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "your@email.com",
+    "sendLoginCode": "Ipadala ang Login Code",
+    "sending": "Ipinapadala...",
+    "checkEmail": "Suriin ang iyong email para sa 6-digit code!",
+    "successfullySignedIn": "Matagumpay na nag-sign in!",
+    "enterCode": "Ilagay ang 6-Digit Code",
+    "codePlaceholder": "000000",
+    "sentTo": "Ipinadala sa {email}",
+    "verifyCode": "I-verify ang Code",
+    "verifying": "Nag-ve-verify...",
+    "backToEmail": "← Bumalik sa email",
+    "termsAndPrivacy": "Sa pag-sign in, sumasang-ayon ka sa aming Mga Tuntunin ng Serbisyo at Patakaran sa Privacy.",
+    "termsOfService": "Mga Tuntunin ng Serbisyo",
+    "privacyPolicy": "Patakaran sa Privacy"
+  },
+  "chat": {
+    "welcome": "Maligayang pagdating sa DocsBridge!",
+    "welcomeDescription": "Matutulungan kita na maunawaan ang mga patakaran, subsidyo, at serbisyo ng gobyerno.",
+    "freeQueryRemaining": "Mayroon kang 1 libreng query na natitira bago kailangan ang pag-sign in.",
+    "typeOrVoice": "Maaari kang mag-type ng tanong, gumamit ng boses, o pumili ng paksa sa ibaba upang magsimula.",
+    "messagePlaceholder": "Mensahe sa DocsBridge...",
+    "aiDisclaimer": "Maaaring magkamali ang AI. Mangyaring i-verify ang mahalagang impormasyon sa mga opisyal na mapagkukunan.",
+    "newChat": "Bagong Chat",
+    "attachFile": "Maglakip ng file",
+    "useVoice": "Gumamit ng voice input",
+    "stopRecording": "Ihinto ang recording",
+    "listening": "Nakikinig...",
+    "playResponse": "I-play ang tugon",
+    "stopPlaying": "Ihinto ang pag-play",
+    "sendMessage": "Ipadala ang mensahe",
+    "signInToStartChat": "Mag-sign in upang magsimula ng bagong chat",
+    "signInToSaveHistory": "Mag-sign in upang i-save ang iyong chat history at ma-access ang higit pang features.",
+    "signInToGetResponse": "Mangyaring mag-sign in upang makakuha ng AI responses at ipagpatuloy ang pag-uusap.",
+    "topics": {
+      "healthcare": "Mga subsidyo sa kalusugan",
+      "cashAid": "Tulong pinansyal (STR)",
+      "education": "Suporta sa edukasyon",
+      "housing": "Tulong sa pabahay"
+    }
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "newChat": "Bagong Chat",
+    "search": "Maghanap",
+    "knowledgeBase": "Base ng Kaalaman",
+    "officialGovDocs": "Opisyal na Mga Dokumento ng Gobyerno",
+    "manageKnowledge": "Pamahalaan ang Kaalaman",
+    "today": "Ngayon",
+    "previous7Days": "Nakaraang 7 Araw",
+    "older": "Mas Luma",
+    "userProfile": "Profile ng User",
+    "freePlan": "Libreng Plan",
+    "proPlan": "Pro Plan",
+    "businessPlan": "Business Plan",
+    "proFeature": "PRO",
+    "confirmDeleteConversation": "Sigurado ka bang gusto mong tanggalin ang pag-uusap na ito? Hindi na mababawi ang aksyong ito."
+  },
+  "settings": {
+    "title": "Mga Setting",
+    "tabs": {
+      "account": "Account",
+      "plan": "Plan at Subscription",
+      "notifications": "Mga Notification",
+      "usage": "Paggamit"
+    },
+    "account": {
+      "title": "Profile ng Account",
+      "fullName": "Buong Pangalan",
+      "fullNamePlaceholder": "DocsBridge User",
+      "emailAddress": "Email Address",
+      "languagePreference": "Kagustuhan sa Wika",
+      "fontSize": "Laki ng Font",
+      "theme": "Theme",
+      "light": "Maliwanag",
+      "dark": "Madilim",
+      "signOut": "Mag-sign Out",
+      "saveSuccess": "Matagumpay na na-save ang mga pagbabago!",
+      "fontSizes": {
+        "small": "Maliit",
+        "medium": "Katamtaman (Default)",
+        "large": "Malaki",
+        "extraLarge": "Napakala ki"
+      },
+      "languages": {
+        "en": "English (EN)",
+        "ms": "Bahasa Melayu (BM)",
+        "zh": "中文",
+        "ta": "தமிழ்",
+        "tl": "Tagalog (TL)",
+        "id": "Bahasa Indonesia (ID)"
+      }
+    },
+    "plan": {
+      "title": "Plan at Subscription",
+      "currentPlan": "KASALUKUYANG PLAN",
+      "recommended": "INIREREKOMENDA",
+      "free": {
+        "name": "Libreng Plan",
+        "price": "RM 0",
+        "period": "/buwan",
+        "description": "Pangunahing access para sa mga mamamayan na maunawaan ang mga serbisyo ng gobyerno.",
+        "features": {
+          "assistant": "DocsBridge Gov Assistant",
+          "knowledgeBase": "Access sa Opisyal na Base ng Kaalaman",
+          "messageLimits": "Standard na mga limitasyon sa mensahe"
+        }
+      },
+      "pro": {
+        "name": "Pro Plan",
+        "price": "RM 20",
+        "period": "/buwan",
+        "description": "Mga advanced na feature para sa power users at mga propesyonal.",
+        "features": {
+          "everything": "Lahat sa Libreng Plan",
+          "uploadDocs": "Mag-upload ng pribadong mga dokumento",
+          "personalKB": "Lumikha ng personal na base ng kaalaman",
+          "higherLimits": "Mas mataas na mga limitasyon sa AI message"
+        }
+      },
+      "business": {
+        "name": "Business Plan",
+        "price": "Custom",
+        "description": "Para sa mga ahensya, organisasyon, at pakikipagtulungan ng koponan.",
+        "features": {
+          "everything": "Lahat sa Pro Plan",
+          "aiAgents": "Lumikha ng mga AI agent",
+          "teamWorkspace": "Team workspace at pagbabahagi",
+          "prioritySupport": "Dedikadong priority support"
+        }
+      },
+      "currentlyActive": "Kasalukuyang Aktibo",
+      "upgradeToPro": "Mag-upgrade sa Pro",
+      "contactUs": "Makipag-ugnayan sa Amin",
+      "upgradeSuccess": "Matagumpay na na-upgrade ang plan!"
+    },
+    "notifications": {
+      "title": "Mga Setting ng Notification",
+      "soundNotifications": "Mga Notification ng Tunog",
+      "soundDescription": "Mag-play ng tunog kapag nakumpleto ng AI ang tugon",
+      "notificationSound": "Tunog ng Notification",
+      "testSound": "I-test ang Tunog",
+      "aboutNotifications": "Tungkol sa Mga Notification",
+      "aboutDescription": "Ang mga notification ng tunog ay tumutulong sa iyo na malaman kung kailan natapos ng AI ang pagbuo ng tugon, lalo na kapag nag-multitasking ka o nasa background ang tab.",
+      "sounds": {
+        "default": "Default",
+        "chime": "Chime",
+        "bell": "Bell",
+        "ding": "Ding",
+        "pop": "Pop"
+      }
+    },
+    "usage": {
+      "title": "Buod ng Paggamit",
+      "aiMessageLimit": "Limitasyon sa AI Message",
+      "cycleResets": "Ang cycle ay mare-reset sa {days} araw",
+      "messagesUsed": "Mga Mensaheng Ginamit",
+      "tokensUsed": "Mga Token na Ginamit",
+      "tokensDescription": "Kabuuang mga token na na-consume sa cycle na ito",
+      "noData": "Walang available na data ng paggamit",
+      "approachingLimit": "Papalapit ka na sa iyong libreng limitasyon. {upgradeLink} upang dagdagan ang iyong kapasidad.",
+      "approachingLimitSimple": "Papalapit ka na sa iyong libreng limitasyon.",
+      "upgradeToPro": "Mag-upgrade sa Pro",
+      "toIncreaseCapacity": "upang dagdagan ang iyong kapasidad."
+    }
+  },
+  "header": {
+    "archive": "Archive",
+    "categories": "Mga Kategorya",
+    "delete": "Tanggalin"
+  },
+  "errors": {
+    "uploadFileFailed": "Nabigo ang pag-upload ng file",
+    "deleteAttachmentFailed": "Nabigo ang pagtanggal ng attachment",
+    "deleteDocumentFailed": "Nabigo ang pagtanggal ng dokumento",
+    "deleteFolderFailed": "Nabigo ang pagtanggal ng folder",
+    "editFolderFailed": "Nabigo ang pag-edit ng folder",
+    "editDocumentFailed": "Nabigo ang pag-edit ng dokumento",
+    "cannotEditSystemFolder": "Hindi maaaring i-edit ang system folder",
+    "systemFoldersCannotBeModified": "Ang mga system folder ay hindi maaaring baguhin",
+    "noSpeechDetected": "Walang natukoy na pananalita. Mangyaring subukan muli.",
+    "microphoneAccessDenied": "Tinanggihan ang access sa mikropono. Mangyaring payagan ang access sa mikropono sa iyong mga setting ng browser.",
+    "networkError": "Error sa network. Mangyaring suriin ang iyong koneksyon sa internet."
+  },
+  "success": {
+    "documentLoadedFromChat": "Na-load ang dokumento mula sa chat source"
+  },
+  "chatInterface": {
+    "stopPlaying": "Ihinto ang Pag-play",
+    "playResponse": "I-play ang Tugon",
+    "showOriginal": "Ipakita ang Orihinal",
+    "translateTo": "Isalin sa {dialect}",
+    "translating": "Nagsasalin...",
+    "simplifying": "Pinasimple...",
+    "simplifyProfessionalWords": "Pasimplehin ang Mga Propesyonal na Salita",
+    "summarizing": "Binubuod...",
+    "summarizeOverall": "Buod ng Kabuuan",
+    "summarizeInPointForm": "Buod sa Point Form",
+    "voiceWarning": "Ang voice pack para sa wikang ito ay hindi available",
+    "voiceWarningDescription": "Upang makakuha ng mas mahusay na kalidad ng boses, i-install ang language voice pack sa iyong mga system settings.",
+    "howToInstallVoicePacks": "Paano mag-install ng mga voice pack",
+    "windowsInstructions": "Windows: Settings → Time & Language → Speech → Add voices",
+    "macosInstructions": "macOS: System Preferences → Accessibility → Spoken Content → Manage Voices",
+    "mobileInstructions": "Android/iOS: Karaniwang naka-install na, suriin ang mga system language settings",
+    "readabilityGrade": "Readability: Grade {grade}",
+    "originalGrade": "Orihinal: Grade {grade}",
+    "percentEasier": "{percent}% mas madali",
+    "simplified": "Pinasimple",
+    "hoverTip": "💡 Tip: I-hover ang mga salitang may underline upang makita ang mga paliwanag",
+    "translationQuality": "Kalidad ng Pagsasalin",
+    "confidence": "Confidence: {percent}%",
+    "lowConfidenceWarning": "⚠️ Mababang confidence - ang pagsasalin ay maaaring hindi ganap na tumpak",
+    "highConfidence": "✓ Mataas",
+    "mediumConfidence": "~ Katamtaman",
+    "lowConfidence": "! Mababa",
+    "keyPoints": "Mga Pangunahing Punto:",
+    "actionsToTake": "Mga Aksyong Gagawin:",
+    "reducedWords": "📊 Binawasan mula {original} hanggang {summary} salita ({reduction}% mas maikli)",
+    "confidenceLevel": "Confidence: {percent}% ({level})",
+    "sources": "📚 Mga Pinagmulan ({count})",
+    "viewExternalSource": "Tingnan ang external source →",
+    "clickToViewInKB": "📄 I-click upang tingnan sa KB →",
+    "thinking": "Nag-iisip..."
+  },
+  "chatPage": {
+    "docsBridgeAI": "DocsBridge AI",
+    "docsBridgePlus": "DocsBridge Plus",
+    "fasterResponses": "Mas mabilis na mga tugon, maganda para sa mabilis na mga query",
+    "bestAccuracy": "Pinakamahusay na katumpakan para sa mga komplikadong tanong"
+  },
+  "knowledgeBaseInterface": {
+    "noDocumentSelected": "Walang napiling dokumento",
+    "createFirstDocument": "Lumikha ng iyong unang dokumento",
+    "selectOrCreate": "Lumikha ng bagong dokumento o pumili mula sa sidebar",
+    "createFolderFirst": "Lumikha muna ng folder upang ayusin ang iyong mga dokumento",
+    "retry": "Subukan Muli",
+    "createYourFirstDocument": "Lumikha ng iyong unang dokumento"
+  },
+  "common": {
+    "save": "I-save ang Mga Pagbabago",
+    "saving": "Nag-se-save...",
+    "delete": "Tanggalin",
+    "edit": "I-edit",
+    "create": "Lumikha",
+    "active": "Aktibo",
+    "guest": "Bisita",
+    "notSignedIn": "Hindi Naka-sign In"
   }
 }

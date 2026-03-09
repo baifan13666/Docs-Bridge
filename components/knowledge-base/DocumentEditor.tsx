@@ -131,7 +131,7 @@ export default function DocumentEditor({ document, onUpdate }: DocumentEditorPro
       }
     } catch (error: any) {
       console.error('Error uploading files:', error);
-      toast.error('Failed to upload file', {
+      toast.error(t('errors.uploadFileFailed'), {
         description: error.message
       });
     } finally {
@@ -149,7 +149,7 @@ export default function DocumentEditor({ document, onUpdate }: DocumentEditorPro
       setAttachments(prev => prev.filter(att => att.id !== id));
     } catch (error: any) {
       console.error('Error deleting attachment:', error);
-      toast.error('Failed to delete attachment', {
+      toast.error(t('errors.deleteAttachmentFailed'), {
         description: error.message
       });
     }
@@ -426,7 +426,7 @@ export default function DocumentEditor({ document, onUpdate }: DocumentEditorPro
           <div className="mt-12 pt-8 border-t border-(--color-border)">
             <h3 className="text-base font-semibold text-(--color-text-primary) mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-xl">attach_file</span>
-              {loadingAttachments ? 'Loading attachments...' : t('knowledgeBase.attachments', { count: attachments.length })}
+              {loadingAttachments ? t('common.loading') : t('knowledgeBase.attachments', { count: attachments.length })}
             </h3>
             <div className="grid grid-cols-1 gap-3">
               {loadingAttachments ? (

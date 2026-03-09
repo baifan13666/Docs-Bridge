@@ -76,7 +76,7 @@ export default function ChatPage({
                     <img src="/notextlogo.png" alt="DocsBridge" className="w-full h-full object-contain" />
                   </div>
                   <span className="text-lg font-semibold text-(--color-text-primary)">
-                    {modelMode === 'mini' ? 'DocsBridge AI' : 'DocsBridge Plus'}
+                    {modelMode === 'mini' ? t('chatPage.docsBridgeAI') : t('chatPage.docsBridgePlus')}
                   </span>
                   <span className="material-symbols-outlined text-[20px] text-(--color-text-secondary)">
                     {showModelPopover ? 'expand_less' : 'expand_more'}
@@ -99,13 +99,13 @@ export default function ChatPage({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-(--color-text-primary)">DocsBridge AI</span>
+                            <span className="font-semibold text-(--color-text-primary)">{t('chatPage.docsBridgeAI')}</span>
                             {modelMode === 'mini' && (
                               <span className="material-symbols-outlined text-[18px] text-(--color-accent)">check</span>
                             )}
                           </div>
                           <p className="text-xs text-(--color-text-secondary) mt-0.5">
-                            Faster responses, great for quick queries
+                            {t('chatPage.fasterResponses')}
                           </p>
                         </div>
                       </button>
@@ -119,13 +119,13 @@ export default function ChatPage({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-(--color-text-primary)">DocsBridge Plus</span>
+                            <span className="font-semibold text-(--color-text-primary)">{t('chatPage.docsBridgePlus')}</span>
                             {modelMode === 'standard' && (
                               <span className="material-symbols-outlined text-[18px] text-(--color-accent)">check</span>
                             )}
                           </div>
                           <p className="text-xs text-(--color-text-secondary) mt-0.5">
-                            Best accuracy for complex questions
+                            {t('chatPage.bestAccuracy')}
                           </p>
                         </div>
                       </button>
@@ -138,19 +138,19 @@ export default function ChatPage({
                 <div className="w-7 h-7 rounded p-1 flex items-center justify-center">
                   <img src="/notextlogo.png" alt="DocsBridge" className="w-full h-full object-contain" />
                 </div>
-                <span className="text-lg font-semibold text-(--color-text-primary)">DocsBridge AI</span>
+                <span className="text-lg font-semibold text-(--color-text-primary)">{t('chatPage.docsBridgeAI')}</span>
               </div>
             )}
           </div>
           
           <div className="flex items-center gap-1">
-            <button className="p-2 text-(--color-accent) hover:bg-(--color-bg-tertiary) rounded-lg transition-colors cursor-pointer" title="Archive">
+            <button className="p-2 text-(--color-accent) hover:bg-(--color-bg-tertiary) rounded-lg transition-colors cursor-pointer" title={t('header.archive')}>
               <span className="material-symbols-outlined">archive</span>
             </button>
-            <button className="p-2 text-(--color-accent) hover:bg-(--color-bg-tertiary) rounded-lg transition-colors cursor-pointer" title="Categories">
+            <button className="p-2 text-(--color-accent) hover:bg-(--color-bg-tertiary) rounded-lg transition-colors cursor-pointer" title={t('header.categories')}>
               <span className="material-symbols-outlined">category</span>
             </button>
-            <button className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors cursor-pointer" title="Delete">
+            <button className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors cursor-pointer" title={t('header.delete')}>
               <span className="material-symbols-outlined">delete</span>
             </button>
           </div>
