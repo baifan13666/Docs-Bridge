@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import Sidebar from './Sidebar';
 import ChatInterface from './ChatInterface';
 
@@ -21,6 +22,7 @@ export default function ChatPage({
   userPlan,
   conversationId
 }: ChatPageProps) {
+  const t = useTranslations();
   const [modelMode, setModelMode] = useState<'standard' | 'mini'>('mini');
   const [showModelPopover, setShowModelPopover] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);

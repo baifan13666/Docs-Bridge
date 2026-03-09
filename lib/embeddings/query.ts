@@ -5,21 +5,37 @@
  * This ensures query embeddings are compatible with document embeddings in the database
  */
 
-import { pipeline, env } from '@xenova/transformers';
-
-// Configure WASM backend for Node.js
-env.backends.onnx.wasm.numThreads = 1;
-env.backends.onnx.wasm.simd = true;
-env.allowLocalModels = false;
-env.allowRemoteModels = true;
-env.useBrowserCache = false;
-env.cacheDir = '/tmp/.transformers-cache';
-
 const MODEL = 'Xenova/bge-small-en-v1.5'; // 384-dim
 const EMBEDDING_DIM = 384;
 
 let pipeline_instance: any = null;
 let isInitializing = false;
+let transformersModule: any = null;
+
+/**
+ * Load transformers module dynamically
+ */
+async function loadTransformers() {
+  if (transformersModule) return transformersModule;
+  
+  try {
+    const { pipeline, env } = await import('@xenova/transformers');
+    
+    // Configure WASM backend for Node.js
+    env.backends.onnx.wasm.numThreads = 1;
+    env.backends.onnx.wasm.simd = true;
+    env.allowLocalModels = false;
+    env.allowRemoteModels = true;
+    env.useBrowserCache = false;
+    env.cacheDir = '/tmp/.transformers-cache';
+    
+    transformersModule = { pipeline, env };
+    return transformersModule;
+  } catch (error) {
+    console.error('[Query Embeddings] Failed to load transformers:', error);
+    throw error;
+  }
+}
 
 /**
  * Initialize bge-small-en-v1.5 model
@@ -38,6 +54,8 @@ async function initModel() {
   try {
     isInitializing = true;
     console.log('[Query Embeddings] Initializing bge-small-en-v1.5...');
+    
+    const { pipeline } = await loadTransformers();
     
     pipeline_instance = await pipeline('feature-extraction', MODEL, {
       quantized: true,
