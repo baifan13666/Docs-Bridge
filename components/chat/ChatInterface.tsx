@@ -36,10 +36,10 @@ export default function ChatInterface({
   const router = useRouter();
   const [input, setInput] = useState('');
   const [showSignInModal, setShowSignInModal] = useState(false);
-  const [guestQueryUsed, setGuestQueryUsed] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId);
   const [sending, setSending] = useState(false);
   const [modelMode, setModelMode] = useState<'standard' | 'mini'>(externalModelMode || 'mini');
+  const [guestQueryUsed, setGuestQueryUsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Custom hooks
@@ -53,6 +53,20 @@ export default function ChatInterface({
     hidePipelineUI,
     hidePipelineAfterDelay 
   } = usePipelineSteps();
+  
+  // Load guest query status from localStorage on mount
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const stored = localStorage.getItem('guestQueryUsed');
+      if (stored === 'true') {
+        setGuestQueryUsed(true);
+      }
+    } else {
+      // Clear guest query status when user is authenticated
+      localStorage.removeItem('guestQueryUsed');
+      setGuestQueryUsed(false);
+    }
+  }, [isAuthenticated]);
   
   // Debug log
   console.log('[ChatInterface] pipelineSteps:', pipelineSteps, 'type:', typeof pipelineSteps, 'isArray:', Array.isArray(pipelineSteps));
@@ -290,7 +304,8 @@ export default function ChatInterface({
     if (!input.trim() || sending) return;
 
     // Check if guest has already used their free query
-    if (!isAuthenticated && guestQueryUsed) {
+    // Use both localStorage and messages.length for robust checking
+    if (!isAuthenticated && (guestQueryUsed || messages.length > 0)) {
       setShowSignInModal(true);
       return;
     }
@@ -323,8 +338,10 @@ export default function ChatInterface({
             created_at: new Date().toISOString()
           };
           addMessage(tempAssistantMessage);
-          // Mark that guest has used their free query AFTER showing the response
+          
+          // Mark that guest has used their free query and persist to localStorage
           setGuestQueryUsed(true);
+          localStorage.setItem('guestQueryUsed', 'true');
         }, 1000);
       } else {
         // Step 1: Language & Dialect Detection
