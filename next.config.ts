@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
   },
   // Indicate that these packages should not be bundled by webpack for server components
   // Moved from experimental.serverComponentsExternalPackages (deprecated in Next.js 16)
-  serverExternalPackages: ['sharp', 'onnxruntime-node'],
+  serverExternalPackages: ['sharp', 'onnxruntime-node', '@xenova/transformers'],
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');

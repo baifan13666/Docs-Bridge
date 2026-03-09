@@ -4,7 +4,7 @@
  * POST /api/chat/query-stream
  * 
  * Complete RAG pipeline with streaming LLM response:
- * 1. Hybrid search (coarse + rerank)
+ * 1. Semantic search with bge-small (384-dim)
  * 2. Build context from retrieved chunks
  * 3. Stream LLM response with RAG context
  * 4. Save messages to database
@@ -15,7 +15,6 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Models } from '@/lib/langchain/openrouter';
 import { withRetry } from '@/lib/langchain/structured';
-import { generateLargeEmbedding, cosineSimilarity } from '@/lib/embeddings/server-dual';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 
@@ -96,15 +95,15 @@ export async function POST(request: NextRequest) {
 
         sendEvent('user_message', { message: userMessage });
 
-        // Step 2: Hybrid search
+        // Step 2: Semantic search with bge-small
         sendEvent('status', { step: 'searching', message: 'Searching knowledge base...' });
         
-        const { data: coarseCandidates, error: searchError } = await supabase
-          .rpc('search_similar_chunks_coarse', {
+        const { data: searchResults, error: searchError } = await supabase
+          .rpc('search_chunks_small', {
             query_embedding,
-            match_threshold: 0.5,
-            match_count: 30,
-            p_user_id: user.id,
+            match_threshold: 0.7,
+            match_count: 10,
+            user_id_param: user.id,
             active_folder_ids: active_folders
           });
 
@@ -114,30 +113,17 @@ export async function POST(request: NextRequest) {
 
         let retrievedChunks: SearchResult[] = [];
 
-        if (coarseCandidates && coarseCandidates.length > 0) {
-          sendEvent('status', { 
-            step: 'reranking', 
-            message: `Found ${coarseCandidates.length} candidates, reranking...` 
-          });
-          
-          const queryLargeEmbedding = await generateLargeEmbedding(query);
-
-          retrievedChunks = coarseCandidates
-            .map((candidate: any) => {
-              const similarity = cosineSimilarity(queryLargeEmbedding, candidate.embedding_large);
-              return {
-                chunk_id: candidate.chunk_id,
-                document_id: candidate.document_id,
-                chunk_text: candidate.chunk_text,
-                similarity,
-                title: candidate.title,
-                source_url: candidate.source_url,
-                document_type: candidate.document_type,
-                chunk_index: candidate.chunk_index
-              };
-            })
-            .sort((a: any, b: any) => b.similarity - a.similarity)
-            .slice(0, 5);
+        if (searchResults && searchResults.length > 0) {
+          retrievedChunks = searchResults.map((result: any) => ({
+            chunk_id: result.id,
+            document_id: result.document_id,
+            chunk_text: result.chunk_text,
+            similarity: result.similarity,
+            title: result.title,
+            source_url: result.source_url,
+            document_type: result.document_type,
+            chunk_index: result.chunk_index
+          }));
 
           sendEvent('sources', { 
             chunks: retrievedChunks,

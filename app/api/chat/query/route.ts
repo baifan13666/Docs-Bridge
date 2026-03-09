@@ -4,7 +4,7 @@
  * POST /api/chat/query
  * 
  * Complete RAG pipeline:
- * 1. Hybrid search (coarse + rerank)
+ * 1. Semantic search with bge-small (384-dim)
  * 2. Build context from retrieved chunks
  * 3. Call LLM with RAG context (using LangChain + OpenRouter)
  * 4. Save messages to database
@@ -14,7 +14,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Models } from '@/lib/langchain/openrouter';
-import { generateLargeEmbedding, cosineSimilarity } from '@/lib/embeddings/server-dual';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 
@@ -91,18 +90,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Hybrid search (coarse + rerank)
-    console.log('[RAG Query] Step 2: Performing hybrid search...');
-    console.log('[RAG Query] - Phase 1: Coarse search with 384-dim embedding...');
+    // Step 2: Semantic search with bge-small (384-dim)
+    console.log('[RAG Query] Step 2: Performing semantic search with bge-small...');
     const searchStartTime = Date.now();
 
-    // Coarse search with 384-dim embedding from client
-    const { data: coarseCandidates, error: searchError } = await supabase
-      .rpc('search_similar_chunks_coarse', {
+    // Search with 384-dim bge-small embedding
+    const { data: searchResults, error: searchError } = await supabase
+      .rpc('search_chunks_small', {
         query_embedding,
-        match_threshold: 0.5,
-        match_count: 30, // ✅ UPDATED: 20 → 30 for better recall
-        p_user_id: user.id,
+        match_threshold: 0.7,
+        match_count: 10,
+        user_id_param: user.id,
         active_folder_ids: active_folders
       });
 
@@ -112,41 +110,27 @@ export async function POST(request: NextRequest) {
 
     let retrievedChunks: SearchResult[] = [];
 
-    if (coarseCandidates && coarseCandidates.length > 0) {
-      console.log(`[RAG Query] ✅ Coarse search found ${coarseCandidates.length} candidates`);
-      console.log('[RAG Query] - Phase 2: Reranking with 1024-dim embedding...');
-      
-      // Server rerank with e5-large (1024-dim)
-      const queryLargeEmbedding = await generateLargeEmbedding(query);
-      console.log(`[RAG Query] ✅ Generated 1024-dim embedding for reranking`);
-
-      retrievedChunks = coarseCandidates
-        .map((candidate: any) => {
-          const similarity = cosineSimilarity(queryLargeEmbedding, candidate.embedding_large);
-          return {
-            chunk_id: candidate.chunk_id,
-            document_id: candidate.document_id,
-            chunk_text: candidate.chunk_text,
-            similarity,
-            title: candidate.title,
-            source_url: candidate.source_url,
-            document_type: candidate.document_type,
-            chunk_index: candidate.chunk_index
-          };
-        })
-        .sort((a: any, b: any) => b.similarity - a.similarity)
-        .slice(0, 5);
-
+    if (searchResults && searchResults.length > 0) {
       const searchTime = Date.now() - searchStartTime;
-      console.log(`[RAG Query] ✅ Reranking complete: Top ${retrievedChunks.length} chunks selected`);
-      console.log(`[RAG Query] ✅ Total search time: ${searchTime}ms`);
+      console.log(`[RAG Query] ✅ Search found ${searchResults.length} chunks in ${searchTime}ms`);
+      
+      retrievedChunks = searchResults.map((result: any) => ({
+        chunk_id: result.id,
+        document_id: result.document_id,
+        chunk_text: result.chunk_text,
+        similarity: result.similarity,
+        title: result.title,
+        source_url: result.source_url,
+        document_type: result.document_type,
+        chunk_index: result.chunk_index
+      }));
       
       // Log top results
       retrievedChunks.forEach((chunk, idx) => {
         console.log(`[RAG Query]   ${idx + 1}. ${chunk.title} (similarity: ${(chunk.similarity * 100).toFixed(1)}%)`);
       });
     } else {
-      console.log('[RAG Query] ⚠️ No relevant chunks found in coarse search');
+      console.log('[RAG Query] ⚠️ No relevant chunks found');
     }
 
     // Step 3: Build RAG context with structured memory
