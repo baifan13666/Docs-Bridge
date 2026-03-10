@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -16,8 +16,25 @@ export default function SignInModal({ onClose }: SignInModalProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const supabase = createClient();
   const router = useRouter();
+
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [resendCooldown]);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -58,6 +75,30 @@ export default function SignInModal({ onClose }: SignInModalProps) {
     } else {
       setOtpSent(true);
       setMessage(t('auth.checkEmail'));
+      setResendCooldown(60); // 60 seconds cooldown
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    
+    setLoading(true);
+    setMessage('');
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+    } else {
+      setMessage(t('auth.codeResent'));
+      setResendCooldown(60); // 60 seconds cooldown
       setLoading(false);
     }
   };
@@ -192,12 +233,27 @@ export default function SignInModal({ onClose }: SignInModalProps) {
               >
                 {loading ? t('auth.verifying') : t('auth.verifyCode')}
               </button>
+              
+              {/* Resend Code Button */}
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={resendCooldown > 0 || loading}
+                className="w-full text-sm text-[#1E3A8A] hover:text-blue-800 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {resendCooldown > 0 
+                  ? t('auth.resendCodeIn', { seconds: resendCooldown })
+                  : t('auth.resendCode')
+                }
+              </button>
+              
               <button
                 type="button"
                 onClick={() => {
                   setOtpSent(false);
                   setOtp('');
                   setMessage('');
+                  setResendCooldown(0);
                 }}
                 className="w-full text-sm text-gray-600 hover:text-gray-800 py-2 cursor-pointer"
               >

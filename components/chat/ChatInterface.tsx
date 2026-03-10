@@ -56,12 +56,15 @@ export default function ChatInterface({
   
   // Load guest query status from localStorage on mount
   useEffect(() => {
+    console.log('[ChatInterface] Mount/Auth change - isAuthenticated:', isAuthenticated);
     if (!isAuthenticated) {
       const stored = localStorage.getItem('guestQueryUsed');
+      console.log('[ChatInterface] Guest mode - localStorage guestQueryUsed:', stored);
       if (stored === 'true') {
         setGuestQueryUsed(true);
       }
     } else {
+      console.log('[ChatInterface] Authenticated mode - clearing guest status');
       // Clear guest query status when user is authenticated
       localStorage.removeItem('guestQueryUsed');
       setGuestQueryUsed(false);
@@ -303,9 +306,16 @@ export default function ChatInterface({
   const handleSendMessage = async () => {
     if (!input.trim() || sending) return;
 
+    // Debug: Log authentication status
+    console.log('[ChatInterface] handleSendMessage - isAuthenticated:', isAuthenticated);
+    console.log('[ChatInterface] handleSendMessage - guestQueryUsed:', guestQueryUsed);
+    console.log('[ChatInterface] handleSendMessage - messages.length:', messages.length);
+
     // Check if guest has already used their free query
-    // Use both localStorage and messages.length for robust checking
-    if (!isAuthenticated && (guestQueryUsed || messages.length > 0)) {
+    // Only check guestQueryUsed flag, not messages.length
+    // (messages.length can be > 0 for authenticated users with history)
+    if (!isAuthenticated && guestQueryUsed) {
+      console.log('[ChatInterface] Guest query limit reached, showing sign-in modal');
       setShowSignInModal(true);
       return;
     }
@@ -320,7 +330,8 @@ export default function ChatInterface({
 
     try {
       if (!isAuthenticated) {
-        // Guest mode - just show locally
+        console.log('[ChatInterface] Processing as guest user');
+        // Guest mode - show user message locally
         const tempUserMessage = {
           id: Date.now().toString(),
           role: 'user' as const,
@@ -329,7 +340,7 @@ export default function ChatInterface({
         };
         addMessage(tempUserMessage);
         
-        // Simulate AI response
+        // Show a friendly message asking them to sign in
         setTimeout(() => {
           const tempAssistantMessage = {
             id: (Date.now() + 1).toString(),
@@ -342,6 +353,9 @@ export default function ChatInterface({
           // Mark that guest has used their free query and persist to localStorage
           setGuestQueryUsed(true);
           localStorage.setItem('guestQueryUsed', 'true');
+          
+          // Hide pipeline after showing message
+          hidePipelineUI();
         }, 1000);
       } else {
         // Step 1: Language & Dialect Detection

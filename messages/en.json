@@ -42,12 +42,15 @@
     "sendLoginCode": "Send Login Code",
     "sending": "Sending...",
     "checkEmail": "Check your email for the 6-digit code!",
+    "codeResent": "Code resent! Check your email.",
     "successfullySignedIn": "Successfully signed in!",
     "enterCode": "Enter 6-Digit Code",
     "codePlaceholder": "000000",
     "sentTo": "Sent to {email}",
     "verifyCode": "Verify Code",
     "verifying": "Verifying...",
+    "resendCode": "Resend Code",
+    "resendCodeIn": "Resend in {seconds}s",
     "backToEmail": "← Back to email",
     "termsAndPrivacy": "By signing in, you agree to our Terms of Service and Privacy Policy.",
     "termsOfService": "Terms of Service",
@@ -56,7 +59,7 @@
   "chat": {
     "welcome": "Welcome to DocsBridge!",
     "welcomeDescription": "I can help you understand government policies, subsidies, and services.",
-    "freeQueryRemaining": "You have 1 free query remaining before sign-in is required.",
+    "freeQueryRemaining": "Sign in to unlock AI-powered responses and save your chat history.",
     "typeOrVoice": "You can type your question, use your voice, or select a topic below to get started.",
     "messagePlaceholder": "Message DocsBridge...",
     "aiDisclaimer": "AI can make mistakes. Please verify important information with official sources.",
@@ -70,7 +73,7 @@
     "sendMessage": "Send message",
     "signInToStartChat": "Sign in to start new chat",
     "signInToSaveHistory": "Sign in to save your chat history and access more features.",
-    "signInToGetResponse": "Please sign in to get AI responses and continue the conversation.",
+    "signInToGetResponse": "Please sign in to get AI-powered responses. Click the sign-in button in the sidebar to continue.",
     "topics": {
       "healthcare": "Healthcare subsidies",
       "cashAid": "Cash aid (STR)",
@@ -314,5 +317,9 @@
     "createFolderFirst": "Create a folder first to organize your documents",
     "retry": "Retry",
     "createYourFirstDocument": "Create your first document"
+  },
+  "difficultWords": {
+    "loading": "Loading explanation...",
+    "clickForExplanation": "Click for explanation"
   }
 }
