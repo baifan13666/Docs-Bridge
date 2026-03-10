@@ -21,7 +21,8 @@ async function loadTransformers() {
   try {
     const { pipeline, env } = await import('@xenova/transformers');
     
-    // Configure WASM backend for Node.js
+    // CRITICAL: Configure WASM backend BEFORE any pipeline creation
+    // This prevents the libonnxruntime.so.1.14.0 error
     env.backends.onnx.wasm.numThreads = 1;
     env.backends.onnx.wasm.simd = true;
     env.allowLocalModels = false;

@@ -24,9 +24,14 @@ async function getTransformers() {
   const module = await import('@xenova/transformers');
   transformers = module;
   
-  // Configure for Node.js environment
+  // CRITICAL: Configure WASM backend BEFORE any pipeline creation
+  // This prevents the libonnxruntime.so.1.14.0 error
+  module.env.backends.onnx.wasm.numThreads = 1;
+  module.env.backends.onnx.wasm.simd = true;
   module.env.allowLocalModels = false;
+  module.env.allowRemoteModels = true;
   module.env.useBrowserCache = false;
+  module.env.cacheDir = '/tmp/.transformers-cache';
   
   return module;
 }
