@@ -53,10 +53,21 @@ export async function POST(request: NextRequest) {
 
         // Check authentication
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
-          sendEvent('error', { error: 'Unauthorized' });
+        
+        // Allow guest users (no authentication) to make ONE query
+        // For authenticated users, check if they exist
+        if (authError && authError.message !== 'Auth session missing!') {
+          // Real auth error (not just missing session)
+          sendEvent('error', { error: 'Authentication error' });
           controller.close();
           return;
+        }
+        
+        const isGuest = !user;
+        console.log(`[RAG Stream] RequestID: ${requestId} - User type: ${isGuest ? 'GUEST' : 'AUTHENTICATED'}`);
+        
+        if (isGuest) {
+          console.log(`[RAG Stream] RequestID: ${requestId} - Processing guest query (no usage tracking)`);
         }
 
         // Get request body
@@ -80,22 +91,42 @@ export async function POST(request: NextRequest) {
         console.log(`[RAG Stream] RequestID: ${requestId} - Starting streaming RAG pipeline...`);
         sendEvent('status', { step: 'started', message: 'Starting RAG pipeline...' });
 
-        // Step 1: Save user message
-        sendEvent('status', { step: 'saving_user_message', message: 'Saving your message...' });
-        const { data: userMessage, error: userMsgError } = await supabase
-          .from('chat_messages')
-          .insert({
+        // Check if this is a guest conversation (temporary ID)
+        const isGuestConversation = conversation_id.startsWith('guest-');
+        
+        let userMessage = null;
+        
+        if (!isGuestConversation) {
+          // Step 1: Save user message (only for authenticated users)
+          sendEvent('status', { step: 'saving_user_message', message: 'Saving your message...' });
+          const { data: savedUserMessage, error: userMsgError } = await supabase
+            .from('chat_messages')
+            .insert({
+              conversation_id,
+              role: 'user',
+              content: query
+            })
+            .select()
+            .single();
+
+          if (userMsgError || !savedUserMessage) {
+            console.error(`[RAG Stream] RequestID: ${requestId} - Failed to save user message:`, userMsgError);
+            sendEvent('error', { error: 'Failed to save user message' });
+            controller.close();
+            return;
+          }
+          
+          userMessage = savedUserMessage;
+        } else {
+          // Guest user: create temporary message object (not saved to DB)
+          console.log(`[RAG Stream] RequestID: ${requestId} - Guest conversation, not saving user message to DB`);
+          userMessage = {
+            id: `guest-msg-${Date.now()}`,
             conversation_id,
             role: 'user',
-            content: query
-          })
-          .select()
-          .single();
-
-        if (userMsgError || !userMessage) {
-          sendEvent('error', { error: 'Failed to save user message' });
-          controller.close();
-          return;
+            content: query,
+            created_at: new Date().toISOString()
+          };
         }
 
         sendEvent('user_message', { message: userMessage });
@@ -103,17 +134,22 @@ export async function POST(request: NextRequest) {
         // Step 2: Semantic search with bge-small
         sendEvent('status', { step: 'searching', message: 'Searching knowledge base...' });
         
-        const { data: searchResults, error: searchError } = await supabase
-          .rpc('search_chunks_small', {
-            query_embedding,
-            match_threshold: 0.7,
-            match_count: 10,
-            user_id_param: user.id,
-            active_folder_ids: active_folders
-          });
+        // Only search if user is authenticated (guest users can't access user-specific documents)
+        let searchResults = null;
+        if (!isGuest && user) {
+          const { data: results, error: searchError } = await supabase
+            .rpc('search_chunks_small', {
+              query_embedding,
+              match_threshold: 0.7,
+              match_count: 10,
+              user_id_param: user.id,
+              active_folder_ids: active_folders
+            });
 
-        if (searchError) {
-          console.error('[RAG Stream] Search error:', searchError);
+          if (searchError) {
+            console.error('[RAG Stream] Search error:', searchError);
+          }
+          searchResults = results;
         }
 
         let retrievedChunks: SearchResult[] = [];
@@ -145,10 +181,14 @@ export async function POST(request: NextRequest) {
         sendEvent('status', { step: 'building_context', message: 'Building context...' });
         
         let structuredMemory;
-        try {
-          structuredMemory = await buildStructuredMemory(user.id, conversation_id, 4000);
-        } catch (memoryError) {
-          console.error('[RAG Stream] Memory error:', memoryError);
+        if (!isGuest && user) {
+          try {
+            structuredMemory = await buildStructuredMemory(user.id, conversation_id, 4000);
+          } catch (memoryError) {
+            console.error('[RAG Stream] Memory error:', memoryError);
+            structuredMemory = null;
+          }
+        } else {
           structuredMemory = null;
         }
         
@@ -196,6 +236,7 @@ ${memoryContext}`;
         let tokensUsed = 0;
         let retryCount = 0;
         const maxRetries = 3;
+        let llmSuccess = false; // Track if LLM generation succeeded
 
         // Retry loop for streaming with exponential backoff
         while (retryCount < maxRetries) {
@@ -218,6 +259,7 @@ ${memoryContext}`;
             tokensUsed = Math.ceil(fullResponse.length / 4); // Rough estimate
             
             sendEvent('status', { step: 'complete', message: 'Response generated' });
+            llmSuccess = true; // Mark as successful
             break; // Success, exit retry loop
             
           } catch (llmError: any) {
@@ -259,57 +301,83 @@ ${memoryContext}`;
         const confidenceScore = calculateConfidenceScore(retrievedChunks, fullResponse, query);
         sendEvent('confidence', { score: confidenceScore });
 
-        // Step 6: Save assistant message
-        const { data: assistantMessage, error: assistantMsgError } = await supabase
-          .from('chat_messages')
-          .insert({
+        // Step 6: Save assistant message (only for authenticated users)
+        let assistantMessage = null;
+        
+        if (!isGuestConversation) {
+          const { data: savedAssistantMessage, error: assistantMsgError } = await supabase
+            .from('chat_messages')
+            .insert({
+              conversation_id,
+              role: 'assistant',
+              content: fullResponse
+            })
+            .select()
+            .single();
+
+          if (assistantMsgError || !savedAssistantMessage) {
+            console.error(`[RAG Stream] RequestID: ${requestId} - Error saving assistant message:`, assistantMsgError);
+          } else {
+            assistantMessage = savedAssistantMessage;
+          }
+        } else {
+          // Guest user: create temporary message object (not saved to DB)
+          console.log(`[RAG Stream] RequestID: ${requestId} - Guest conversation, not saving assistant message to DB`);
+          assistantMessage = {
+            id: `guest-msg-${Date.now() + 1}`,
             conversation_id,
             role: 'assistant',
-            content: fullResponse
-          })
-          .select()
-          .single();
-
-        if (assistantMsgError || !assistantMessage) {
-          console.error('[RAG Stream] Error saving assistant message:', assistantMsgError);
-        } else {
+            content: fullResponse,
+            created_at: new Date().toISOString()
+          };
+        }
+        
+        if (assistantMessage) {
           sendEvent('assistant_message', { message: assistantMessage });
         }
 
-        // Step 7: Update conversation title if first message
-        const { count } = await supabase
-          .from('chat_messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', conversation_id);
+        // Step 7: Update conversation title if first message (only for authenticated users)
+        if (!isGuestConversation) {
+          const { count } = await supabase
+            .from('chat_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conversation_id);
 
-        if (count === 2) {
-          const title = query.length > 50 ? query.substring(0, 47) + '...' : query;
-          await supabase
-            .from('chat_conversations')
-            .update({ title })
-            .eq('id', conversation_id);
+          if (count === 2) {
+            const title = query.length > 50 ? query.substring(0, 47) + '...' : query;
+            await supabase
+              .from('chat_conversations')
+              .update({ title })
+              .eq('id', conversation_id);
+          }
         }
 
-        // Step 8: Track usage
-        console.log(`[RAG Stream] RequestID: ${requestId} - Checking usage BEFORE increment...`);
-        
-        // Check current usage before incrementing
-        const { data: beforeUsage } = await supabase
-          .from('user_plans')
-          .select('messages_used, messages_limit')
-          .eq('user_id', user.id)
-          .single();
-        
-        console.log(`[RAG Stream] RequestID: ${requestId} - Usage BEFORE: ${beforeUsage?.messages_used}/${beforeUsage?.messages_limit}`);
-        
-        try {
-          const { data: usageResult } = await supabase.rpc('increment_message_usage', {
-            p_user_id: user.id,
-            p_tokens_used: tokensUsed
-          });
-          console.log(`[RAG Stream] RequestID: ${requestId} - Usage AFTER increment: ${usageResult?.messages_used}/${usageResult?.messages_limit}`);
-        } catch (usageError) {
-          console.error(`[RAG Stream] RequestID: ${requestId} - Usage tracking error:`, usageError);
+        // Step 8: Track usage (ONLY for authenticated users and if LLM succeeded)
+        if (!isGuest && llmSuccess) {
+          console.log(`[RAG Stream] RequestID: ${requestId} - Checking usage BEFORE increment...`);
+          
+          // Check current usage before incrementing
+          const { data: beforeUsage } = await supabase
+            .from('user_plans')
+            .select('messages_used, messages_limit')
+            .eq('user_id', user!.id)
+            .single();
+          
+          console.log(`[RAG Stream] RequestID: ${requestId} - Usage BEFORE: ${beforeUsage?.messages_used}/${beforeUsage?.messages_limit}`);
+          
+          try {
+            const { data: usageResult } = await supabase.rpc('increment_message_usage', {
+              p_user_id: user!.id,
+              p_tokens_used: tokensUsed
+            });
+            console.log(`[RAG Stream] RequestID: ${requestId} - Usage AFTER increment: ${usageResult?.messages_used}/${usageResult?.messages_limit}`);
+          } catch (usageError) {
+            console.error(`[RAG Stream] RequestID: ${requestId} - Usage tracking error:`, usageError);
+          }
+        } else if (isGuest) {
+          console.log(`[RAG Stream] RequestID: ${requestId} - Guest user, NOT incrementing usage`);
+        } else {
+          console.log(`[RAG Stream] RequestID: ${requestId} - LLM generation failed, NOT incrementing usage`);
         }
 
         console.log(`[RAG Stream] RequestID: ${requestId} - ========== REQUEST COMPLETE ==========`);

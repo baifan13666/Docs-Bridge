@@ -68,8 +68,55 @@ export default function ChatInterface({
       // Clear guest query status when user is authenticated
       localStorage.removeItem('guestQueryUsed');
       setGuestQueryUsed(false);
+      
+      // Check if there's a guest conversation to migrate
+      migrateGuestConversation();
     }
   }, [isAuthenticated]);
+  
+  // Migrate guest conversation to database after login
+  async function migrateGuestConversation() {
+    try {
+      const guestConvStr = localStorage.getItem('guestConversation');
+      if (!guestConvStr) {
+        console.log('[ChatInterface] No guest conversation to migrate');
+        return;
+      }
+
+      const guestConv = JSON.parse(guestConvStr);
+      if (!guestConv.messages || guestConv.messages.length === 0) {
+        console.log('[ChatInterface] Guest conversation has no messages');
+        localStorage.removeItem('guestConversation');
+        return;
+      }
+
+      console.log('[ChatInterface] Migrating guest conversation with', guestConv.messages.length, 'messages');
+
+      const response = await fetch('/api/chat/migrate-guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: guestConv.messages,
+          title: guestConv.messages[0]?.content?.substring(0, 50) || 'Migrated Chat'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[ChatInterface] Successfully migrated guest conversation:', data.conversation.id);
+        
+        // Clear guest conversation from localStorage
+        localStorage.removeItem('guestConversation');
+        
+        // Optionally redirect to the migrated conversation
+        // router.push(`/?conversation=${data.conversation.id}`);
+      } else {
+        console.error('[ChatInterface] Failed to migrate guest conversation:', await response.text());
+      }
+    } catch (error) {
+      console.error('[ChatInterface] Error migrating guest conversation:', error);
+    }
+  }
   
   // Debug log
   console.log('[ChatInterface] pipelineSteps:', pipelineSteps, 'type:', typeof pipelineSteps, 'isArray:', Array.isArray(pipelineSteps));
@@ -213,34 +260,41 @@ export default function ChatInterface({
     
     let convId = conversationIdParam || currentConversationId;
     
-    // If no conversation ID, create one first
+    // If no conversation ID, create one
     if (!convId) {
-      console.log('[ChatInterface] No conversation ID, creating new conversation...');
-      try {
-        const response = await fetch('/api/chat/conversations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: 'New Chat' })
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to create conversation: ${response.status} ${errorText}`);
+      if (isAuthenticated) {
+        // Authenticated users: create real conversation in database
+        console.log('[ChatInterface] No conversation ID, creating new conversation...');
+        try {
+          const response = await fetch('/api/chat/conversations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: 'New Chat' })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to create conversation: ${response.status} ${errorText}`);
+          }
+          
+          const data = await response.json();
+          if (!data.conversation?.id) {
+            throw new Error('Invalid response: missing conversation ID');
+          }
+          
+          convId = data.conversation.id;
+          setCurrentConversationId(convId);
+          markConversationAsJustCreated();
+          console.log('[ChatInterface] Created new conversation:', convId);
+        } catch (error) {
+          console.error('[ChatInterface] Error creating conversation:', error);
+          hidePipelineUI();
+          throw error;
         }
-        
-        const data = await response.json();
-        if (!data.conversation?.id) {
-          throw new Error('Invalid response: missing conversation ID');
-        }
-        
-        convId = data.conversation.id;
-        setCurrentConversationId(convId);
-        markConversationAsJustCreated();
-        console.log('[ChatInterface] Created new conversation:', convId);
-      } catch (error) {
-        console.error('[ChatInterface] Error creating conversation:', error);
-        hidePipelineUI();
-        throw error; // Re-throw to be caught by handleSendMessage
+      } else {
+        // Guest users: use temporary local conversation ID
+        convId = `guest-${Date.now()}`;
+        console.log('[ChatInterface] Guest user, using temporary conversation ID:', convId);
       }
     }
     
@@ -345,11 +399,10 @@ export default function ChatInterface({
       if (!isAuthenticated) {
         console.log(`[ChatInterface] ${sendMessageId} - Processing as guest user - first and only query`);
         
-        // Mark that guest is using their query IMMEDIATELY before adding message
-        setGuestQueryUsed(true);
-        localStorage.setItem('guestQueryUsed', 'true');
+        // Guest mode - DON'T mark as used yet, let them see the response first
+        // We'll mark it as used AFTER they see the AI response
         
-        // Guest mode - show user message locally
+        // Add user message to UI
         const tempUserMessage = {
           id: Date.now().toString(),
           role: 'user' as const,
@@ -358,19 +411,56 @@ export default function ChatInterface({
         };
         addMessage(tempUserMessage);
         
-        // Show a friendly message asking them to sign in
-        setTimeout(() => {
-          const tempAssistantMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant' as const,
-            content: t('chat.signInToGetResponse'),
-            created_at: new Date().toISOString()
-          };
-          addMessage(tempAssistantMessage);
-          
-          // Hide pipeline after showing message
-          hidePipelineUI();
-        }, 1000);
+        // Process the query normally (same as authenticated users)
+        // Step 1: Language & Dialect Detection
+        console.log(`[ChatInterface] ${sendMessageId} - Step 1: Detecting language...`);
+        updatePipelineStep(1, 'active');
+        
+        const detected = await detectLanguage(userMessageContent);
+        
+        if (detected) {
+          console.log(`[ChatInterface] ${sendMessageId} - ✅ Detected: ${detected.language}${detected.dialect ? ` (${detected.dialect})` : ''}`);
+          updatePipelineStep(1, 'completed', `${getLanguageName(detected.language)}${detected.dialect ? ` (${detected.dialect})` : ''}`);
+        } else {
+          updatePipelineStep(1, 'skipped');
+        }
+
+        // Step 2: Query Optimization
+        console.log(`[ChatInterface] ${sendMessageId} - Step 2: Optimizing query...`);
+        updatePipelineStep(2, 'active');
+        
+        let optimizedQuery = userMessageContent;
+        try {
+          const rewriteResult = await nlpApi.rewriteQuery(
+            userMessageContent,
+            detectedLanguage?.language || 'en',
+            detectedLanguage?.dialect,
+            'en'
+          );
+
+          if (rewriteResult.confidence >= 0.7 && rewriteResult.rewritten !== userMessageContent) {
+            optimizedQuery = rewriteResult.rewritten;
+            console.log(`[ChatInterface] ${sendMessageId} - ✅ Query optimized (${rewriteResult.added_keywords.length} keywords added)`);
+            updatePipelineStep(2, 'completed', `+${rewriteResult.added_keywords.length} keywords`);
+          } else {
+            console.log(`[ChatInterface] ${sendMessageId} - ✅ Query already optimal`);
+            updatePipelineStep(2, 'completed', 'Already optimal');
+          }
+        } catch (error) {
+          console.error(`[ChatInterface] ${sendMessageId} - Query optimization failed:`, error);
+          updatePipelineStep(2, 'skipped');
+        }
+
+        // Continue with RAG using optimized query
+        console.log(`[ChatInterface] ${sendMessageId} - Calling continueWithRAG for guest...`);
+        await continueWithRAG(optimizedQuery);
+        console.log(`[ChatInterface] ${sendMessageId} - continueWithRAG completed for guest`);
+        
+        // NOW mark guest as having used their query (AFTER seeing the response)
+        console.log(`[ChatInterface] ${sendMessageId} - Guest has now seen response, marking as used`);
+        setGuestQueryUsed(true);
+        localStorage.setItem('guestQueryUsed', 'true');
+        
       } else {
         // Step 1: Language & Dialect Detection
         console.log(`[ChatInterface] ${sendMessageId} - Step 1: Detecting language...`);

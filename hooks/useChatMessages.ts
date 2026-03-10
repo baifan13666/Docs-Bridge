@@ -14,6 +14,8 @@ interface Message {
   };
 }
 
+const GUEST_CONVERSATION_KEY = 'guestConversation';
+
 export function useChatMessages(
   isAuthenticated: boolean,
   conversationId?: string
@@ -30,9 +32,40 @@ export function useChatMessages(
       }
       loadMessages(conversationId);
     } else if (!isAuthenticated) {
-      setMessages([]);
+      // Load guest conversation from localStorage
+      loadGuestConversation();
     }
   }, [isAuthenticated, conversationId]);
+
+  function loadGuestConversation() {
+    try {
+      const stored = localStorage.getItem(GUEST_CONVERSATION_KEY);
+      if (stored) {
+        const guestData = JSON.parse(stored);
+        setMessages(guestData.messages || []);
+        console.log('[useChatMessages] Loaded guest conversation from localStorage:', guestData.messages?.length, 'messages');
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('[useChatMessages] Error loading guest conversation:', error);
+      setMessages([]);
+    }
+  }
+
+  function saveGuestConversation(msgs: Message[]) {
+    try {
+      const guestData = {
+        conversationId: `guest-${Date.now()}`,
+        messages: msgs,
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem(GUEST_CONVERSATION_KEY, JSON.stringify(guestData));
+      console.log('[useChatMessages] Saved guest conversation to localStorage:', msgs.length, 'messages');
+    } catch (error) {
+      console.error('[useChatMessages] Error saving guest conversation:', error);
+    }
+  }
 
   async function loadMessages(convId: string) {
     try {
@@ -55,11 +88,25 @@ export function useChatMessages(
   }
 
   function addMessage(message: Message) {
-    setMessages(prev => [...prev, message]);
+    setMessages(prev => {
+      const updated = [...prev, message];
+      // Save to localStorage if guest user
+      if (!isAuthenticated) {
+        saveGuestConversation(updated);
+      }
+      return updated;
+    });
   }
 
   function addMessages(newMessages: Message[]) {
-    setMessages(prev => [...prev, ...newMessages]);
+    setMessages(prev => {
+      const updated = [...prev, ...newMessages];
+      // Save to localStorage if guest user
+      if (!isAuthenticated) {
+        saveGuestConversation(updated);
+      }
+      return updated;
+    });
   }
 
   function markConversationAsJustCreated() {
