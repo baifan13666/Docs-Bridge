@@ -17,6 +17,7 @@ import { Models } from '@/lib/langchain/openrouter';
 import { withRetry } from '@/lib/langchain/structured';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Route segment config
 export const runtime = 'nodejs';
@@ -68,6 +69,27 @@ export async function POST(request: NextRequest) {
         
         if (isGuest) {
           console.log(`[RAG Stream] RequestID: ${requestId} - Processing guest query (no usage tracking)`);
+          
+          // Rate limiting for guest users - STRICT: 1 query per hour per IP
+          const clientIP = getClientIP(request);
+          const rateLimitResult = checkRateLimit(
+            `guest-query:${clientIP}`,
+            RATE_LIMITS.GUEST_QUERY
+          );
+
+          if (!rateLimitResult.allowed) {
+            const resetDate = new Date(rateLimitResult.resetTime);
+            const minutesUntilReset = Math.ceil((rateLimitResult.resetTime - Date.now()) / 60000);
+            console.log(`[RAG Stream] RequestID: ${requestId} - Rate limit exceeded for IP ${clientIP}`);
+            sendEvent('error', { 
+              error: `You've used your free query. Please sign in to continue or try again in ${minutesUntilReset} minutes.`,
+              resetTime: resetDate.toISOString()
+            });
+            controller.close();
+            return;
+          }
+
+          console.log(`[RAG Stream] RequestID: ${requestId} - Guest rate limit: ${rateLimitResult.remaining} remaining`);
         }
 
         // Get request body

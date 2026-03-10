@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { detectLanguage } from '@/lib/nlp/detect-language';
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,15 +32,42 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
+    // Verify authentication (allow guest users)
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    // Allow guest users - only check for real auth errors
+    if (authError && authError.message !== 'Auth session missing!') {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication error' },
         { status: 401 }
       );
+    }
+
+    const isGuest = !user;
+    console.log(`[Detect Language API] Request from ${isGuest ? 'GUEST' : 'authenticated'} user`);
+
+    // Rate limiting for guest users
+    if (isGuest) {
+      const clientIP = getClientIP(request);
+      const rateLimitResult = checkRateLimit(
+        `guest-nlp:${clientIP}`,
+        RATE_LIMITS.GUEST_NLP
+      );
+
+      if (!rateLimitResult.allowed) {
+        const resetDate = new Date(rateLimitResult.resetTime);
+        console.log(`[Detect Language API] Rate limit exceeded for IP ${clientIP}`);
+        return NextResponse.json(
+          { 
+            error: 'Rate limit exceeded. Please sign in to continue.',
+            resetTime: resetDate.toISOString()
+          },
+          { status: 429 }
+        );
+      }
+
+      console.log(`[Detect Language API] Guest rate limit: ${rateLimitResult.remaining} remaining`);
     }
 
     // Parse request body
@@ -54,7 +82,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Detection API] User ${user.id} detecting language for: "${text.substring(0, 50)}..."`);
+    console.log(`[Detection API] ${isGuest ? 'Guest' : `User ${user!.id}`} detecting language for: "${text.substring(0, 50)}..."`);
 
     // Detect language and dialect
     const detection = await detectLanguage(text);
