@@ -35,6 +35,9 @@ interface SearchResult {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = `api-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  console.log(`[RAG Stream] ========== NEW REQUEST - RequestID: ${requestId} ==========`);
+  
   const encoder = new TextEncoder();
   
   const stream = new ReadableStream({
@@ -66,13 +69,15 @@ export async function POST(request: NextRequest) {
           model_mode = 'standard',
         } = body;
 
+        console.log(`[RAG Stream] RequestID: ${requestId} - Received request for conversation: ${conversation_id}`);
+
         if (!conversation_id || !query) {
           sendEvent('error', { error: 'conversation_id and query are required' });
           controller.close();
           return;
         }
 
-        console.log('[RAG Stream] Starting streaming RAG pipeline...');
+        console.log(`[RAG Stream] RequestID: ${requestId} - Starting streaming RAG pipeline...`);
         sendEvent('status', { step: 'started', message: 'Starting RAG pipeline...' });
 
         // Step 1: Save user message
@@ -286,15 +291,28 @@ ${memoryContext}`;
         }
 
         // Step 8: Track usage
+        console.log(`[RAG Stream] RequestID: ${requestId} - Checking usage BEFORE increment...`);
+        
+        // Check current usage before incrementing
+        const { data: beforeUsage } = await supabase
+          .from('user_plans')
+          .select('messages_used, messages_limit')
+          .eq('user_id', user.id)
+          .single();
+        
+        console.log(`[RAG Stream] RequestID: ${requestId} - Usage BEFORE: ${beforeUsage?.messages_used}/${beforeUsage?.messages_limit}`);
+        
         try {
-          await supabase.rpc('increment_message_usage', {
+          const { data: usageResult } = await supabase.rpc('increment_message_usage', {
             p_user_id: user.id,
             p_tokens_used: tokensUsed
           });
+          console.log(`[RAG Stream] RequestID: ${requestId} - Usage AFTER increment: ${usageResult?.messages_used}/${usageResult?.messages_limit}`);
         } catch (usageError) {
-          console.error('[RAG Stream] Usage tracking error:', usageError);
+          console.error(`[RAG Stream] RequestID: ${requestId} - Usage tracking error:`, usageError);
         }
 
+        console.log(`[RAG Stream] RequestID: ${requestId} - ========== REQUEST COMPLETE ==========`);
         sendEvent('done', { success: true });
         controller.close();
         

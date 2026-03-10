@@ -363,11 +363,21 @@ export default function Sidebar({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center opacity-70 py-12">
-              <span className="material-symbols-outlined text-4xl text-(--color-sidebar-text-secondary) mb-4">history_toggle_off</span>
-              <p className="text-sm text-(--color-sidebar-text-secondary) px-4">
+            <div className="flex flex-col items-center justify-center text-center py-12 px-4">
+              <span className="material-symbols-outlined text-5xl text-(--color-sidebar-text-secondary) mb-4">lock</span>
+              <h3 className="text-base font-semibold text-(--color-sidebar-text) mb-2">
+                {t('sidebar.signInRequired')}
+              </h3>
+              <p className="text-sm text-(--color-sidebar-text-secondary) mb-6">
                 {t('chat.signInToSaveHistory')}
               </p>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="w-full max-w-[200px] flex items-center justify-center gap-2 px-4 py-2.5 bg-(--color-accent) text-white rounded-lg hover:bg-(--color-accent-hover) transition-colors font-medium cursor-pointer shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">login</span>
+                {t('sidebar.signIn')}
+              </button>
             </div>
           )}
         </div>

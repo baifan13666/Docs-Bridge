@@ -96,7 +96,9 @@
     "proPlan": "Pro Plan",
     "businessPlan": "Business Plan",
     "proFeature": "PRO",
-    "confirmDeleteConversation": "Are you sure you want to delete this conversation? This action cannot be undone."
+    "confirmDeleteConversation": "Are you sure you want to delete this conversation? This action cannot be undone.",
+    "signInRequired": "Sign In Required",
+    "signIn": "Sign In"
   },
   "settings": {
     "title": "Settings",

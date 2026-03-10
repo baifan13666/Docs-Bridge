@@ -7,7 +7,15 @@
     "back": "返回",
     "submit": "提交",
     "cancel": "取消",
-    "close": "关闭"
+    "close": "关闭",
+    "save": "保存更改",
+    "saving": "保存中...",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "active": "激活",
+    "guest": "访客",
+    "notSignedIn": "未登录"
   },
   "home": {
     "title": "DocsBridge",
@@ -126,7 +134,9 @@
     "proPlan": "专业计划",
     "businessPlan": "商业计划",
     "proFeature": "专业版",
-    "confirmDeleteConversation": "确定要删除此对话吗？此操作无法撤消。"
+    "confirmDeleteConversation": "确定要删除此对话吗？此操作无法撤消。",
+    "signInRequired": "需要登录",
+    "signIn": "登录"
   },
   "settings": {
     "title": "设置",
@@ -308,14 +318,8 @@
     "retry": "重试",
     "createYourFirstDocument": "创建您的第一个文档"
   },
-  "common": {
-    "save": "保存更改",
-    "saving": "保存中...",
-    "delete": "删除",
-    "edit": "编辑",
-    "create": "创建",
-    "active": "激活",
-    "guest": "访客",
-    "notSignedIn": "未登录"
+  "difficultWords": {
+    "loading": "加载解释中...",
+    "clickForExplanation": "点击查看解释"
   }
 }

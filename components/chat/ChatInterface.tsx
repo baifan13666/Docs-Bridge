@@ -208,6 +208,9 @@ export default function ChatInterface({
 
   // Streaming RAG (new implementation)
   async function continueWithStreamingRAG(queryText: string, conversationIdParam?: string) {
+    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[ChatInterface] continueWithStreamingRAG START - RequestID: ${requestId}`);
+    
     let convId = conversationIdParam || currentConversationId;
     
     // If no conversation ID, create one first
@@ -266,12 +269,14 @@ export default function ChatInterface({
     addMessage(tempStreamingMessage);
     
     // Execute streaming query
+    console.log(`[ChatInterface] Calling executeStreamingQuery - RequestID: ${requestId}`);
     const result = await executeStreamingQuery(
       convId,
       queryText,
       embedding,
       modelMode
     );
+    console.log(`[ChatInterface] executeStreamingQuery completed - RequestID: ${requestId}`);
     
     // Update conversation ID if needed
     if (result.assistantMessage) {
@@ -304,18 +309,24 @@ export default function ChatInterface({
   }
 
   const handleSendMessage = async () => {
-    if (!input.trim() || sending) return;
+    const sendMessageId = `send-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[ChatInterface] ========== handleSendMessage START - ID: ${sendMessageId} ==========`);
+    
+    if (!input.trim() || sending) {
+      console.log(`[ChatInterface] ${sendMessageId} - Blocked: input empty or already sending`);
+      return;
+    }
 
     // Debug: Log authentication status
-    console.log('[ChatInterface] handleSendMessage - isAuthenticated:', isAuthenticated);
-    console.log('[ChatInterface] handleSendMessage - guestQueryUsed:', guestQueryUsed);
-    console.log('[ChatInterface] handleSendMessage - messages.length:', messages.length);
+    console.log(`[ChatInterface] ${sendMessageId} - isAuthenticated:`, isAuthenticated);
+    console.log(`[ChatInterface] ${sendMessageId} - guestQueryUsed:`, guestQueryUsed);
+    console.log(`[ChatInterface] ${sendMessageId} - messages.length:`, messages.length);
 
     // Check if guest has already used their free query
     // Only check guestQueryUsed flag, not messages.length
     // (messages.length can be > 0 for authenticated users with history)
     if (!isAuthenticated && guestQueryUsed) {
-      console.log('[ChatInterface] Guest query limit reached, showing sign-in modal');
+      console.log(`[ChatInterface] ${sendMessageId} - Guest query limit reached, showing sign-in modal`);
       setShowSignInModal(true);
       return;
     }
@@ -324,13 +335,20 @@ export default function ChatInterface({
     setInput('');
     setSending(true);
     
+    console.log(`[ChatInterface] ${sendMessageId} - Processing message: "${userMessageContent.substring(0, 50)}..."`);
+    
     // Reset and show pipeline
     resetSteps();
     showPipelineUI();
 
     try {
       if (!isAuthenticated) {
-        console.log('[ChatInterface] Processing as guest user');
+        console.log(`[ChatInterface] ${sendMessageId} - Processing as guest user - first and only query`);
+        
+        // Mark that guest is using their query IMMEDIATELY before adding message
+        setGuestQueryUsed(true);
+        localStorage.setItem('guestQueryUsed', 'true');
+        
         // Guest mode - show user message locally
         const tempUserMessage = {
           id: Date.now().toString(),
@@ -350,22 +368,18 @@ export default function ChatInterface({
           };
           addMessage(tempAssistantMessage);
           
-          // Mark that guest has used their free query and persist to localStorage
-          setGuestQueryUsed(true);
-          localStorage.setItem('guestQueryUsed', 'true');
-          
           // Hide pipeline after showing message
           hidePipelineUI();
         }, 1000);
       } else {
         // Step 1: Language & Dialect Detection
-        console.log('[ChatInterface] Step 1: Detecting language...');
+        console.log(`[ChatInterface] ${sendMessageId} - Step 1: Detecting language...`);
         updatePipelineStep(1, 'active');
         
         const detected = await detectLanguage(userMessageContent);
         
         if (detected) {
-          console.log(`[ChatInterface] ✅ Detected: ${detected.language}${detected.dialect ? ` (${detected.dialect})` : ''}`);
+          console.log(`[ChatInterface] ${sendMessageId} - ✅ Detected: ${detected.language}${detected.dialect ? ` (${detected.dialect})` : ''}`);
           updatePipelineStep(1, 'completed', `${getLanguageName(detected.language)}${detected.dialect ? ` (${detected.dialect})` : ''}`);
           
           // Don't show system message - just log it
@@ -375,7 +389,7 @@ export default function ChatInterface({
         }
 
         // Step 2: Query Optimization (rewrite for better retrieval)
-        console.log('[ChatInterface] Step 2: Optimizing query...');
+        console.log(`[ChatInterface] ${sendMessageId} - Step 2: Optimizing query...`);
         updatePipelineStep(2, 'active');
         
         let optimizedQuery = userMessageContent;
@@ -389,23 +403,25 @@ export default function ChatInterface({
 
           if (rewriteResult.confidence >= 0.7 && rewriteResult.rewritten !== userMessageContent) {
             optimizedQuery = rewriteResult.rewritten;
-            console.log(`[ChatInterface] ✅ Query optimized (${rewriteResult.added_keywords.length} keywords added)`);
+            console.log(`[ChatInterface] ${sendMessageId} - ✅ Query optimized (${rewriteResult.added_keywords.length} keywords added)`);
             updatePipelineStep(2, 'completed', `+${rewriteResult.added_keywords.length} keywords`);
           } else {
-            console.log('[ChatInterface] ✅ Query already optimal');
+            console.log(`[ChatInterface] ${sendMessageId} - ✅ Query already optimal`);
             updatePipelineStep(2, 'completed', 'Already optimal');
           }
         } catch (error) {
-          console.error('[ChatInterface] Query optimization failed:', error);
+          console.error(`[ChatInterface] ${sendMessageId} - Query optimization failed:`, error);
           updatePipelineStep(2, 'skipped');
           // Continue with original query
         }
 
         // Continue with RAG using optimized query
+        console.log(`[ChatInterface] ${sendMessageId} - Calling continueWithRAG...`);
         await continueWithRAG(optimizedQuery);
+        console.log(`[ChatInterface] ${sendMessageId} - continueWithRAG completed`);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error(`[ChatInterface] ${sendMessageId} - Error sending message:`, error);
       // Restore input on error
       setInput(userMessageContent);
       hidePipelineUI();
@@ -413,6 +429,7 @@ export default function ChatInterface({
       setSending(false);
       // Hide pipeline after a delay
       hidePipelineAfterDelay();
+      console.log(`[ChatInterface] ========== handleSendMessage END - ID: ${sendMessageId} ==========`);
     }
   };
 
