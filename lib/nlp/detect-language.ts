@@ -38,7 +38,6 @@ export async function detectLanguage(text: string) {
         model: ModelPresets.LFM_THINKING,
         temperature: 0.3, // Low for consistent classification
         maxTokens: 200,   // Short responses
-        strict: false,    // OpenRouter compatibility
       })
     );
 

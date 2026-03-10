@@ -36,17 +36,16 @@ export function createStructuredModel<T extends z.ZodType>(
   schema: T,
   config: ModelConfig & {
     name: string;
-    strict?: boolean;
   }
 ) {
-  const { name, strict = false, ...modelConfig } = config;
+  const { name, ...modelConfig } = config;
   
   const model = createOpenRouterModel(modelConfig);
   
   return model.withStructuredOutput(schema, {
     name,
     method: "jsonMode", // More forgiving than jsonSchema for OpenRouter
-    strict, // Default false for OpenRouter compatibility
+    // Note: strict parameter not supported with jsonMode
   });
 }
 
