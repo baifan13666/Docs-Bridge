@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     ],
   },
   // Configure webpack for @huggingface/transformers
-  // Based on official Transformers.js documentation
+  // Based on official Transformers.js documentation for Next.js 16
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -28,8 +28,7 @@ const nextConfig: NextConfig = {
     };
     return config;
   },
-  // Prevent webpack from bundling server-side packages
-  // Based on official Transformers.js documentation
+  // Prevent webpack from bundling server-side packages (Next.js 16+)
   serverExternalPackages: ['sharp', 'onnxruntime-node'],
 };
 

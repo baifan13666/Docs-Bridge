@@ -69,7 +69,7 @@ Multi-stage NLP pipeline that:
   - **RAG Mini**: Trinity Mini (fast responses)
   - **NLP Tasks**: Trinity Mini (simplification, summarization, translation)
 - **Embeddings**: 
-  - **Query**: bge-small-en-v1.5 (384-dim) via @xenova/transformers
+  - **Query**: bge-small-en-v1.5 (384-dim) via @huggingface/transformers
   - **Documents**: bge-small-en-v1.5 (384-dim) for coarse search
   - **Reranking**: bge-large-en-v1.5 (1024-dim) for precision
 - **LangChain**: @langchain/textsplitters (document chunking only)
@@ -77,7 +77,9 @@ Multi-stage NLP pipeline that:
 - **Architecture**: Vercel AI SDK for streaming, LangChain for workflow orchestration only
 
 ### Key Libraries
-- **@xenova/transformers**: 2.17.2 (browser-side embeddings)
+- **@huggingface/transformers**: 3.8.1 (server-side embeddings with WASM)
+- **onnxruntime-web**: 1.24.3 (WASM runtime for transformers)
+- **onnxruntime-common**: 1.24.3 (common ONNX utilities)
 - **@browser-ai/transformers-js**: 2.1.6 (WebGPU support)
 - **zod**: 4.3.6 (schema validation)
 - **ai**: 6.0.116 (Vercel AI SDK)

@@ -66,7 +66,7 @@ export async function generateQueryEmbedding(query: string): Promise<number[]> {
     // Check if transformers is available
     const transformers = await checkTransformersAvailability();
     if (!transformers) {
-      throw new Error('Transformers library not available. This is required for embedding generation. Please ensure @xenova/transformers is properly installed.');
+      throw new Error('Transformers library not available. This is required for embedding generation. Please ensure @huggingface/transformers and its dependencies (onnxruntime-web, onnxruntime-common) are properly installed.');
     }
     
     // Initialize model if needed (with proper locking)
