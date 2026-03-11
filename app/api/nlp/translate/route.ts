@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { translateToDialect } from '@/lib/nlp/translate';
+import { translateText } from '@/lib/ai';
 
 // Route segment config
 export const runtime = 'nodejs';
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Translate API] Translating to ${target_language}${target_dialect ? ` (${target_dialect})` : ''}...`);
 
     // Perform translation
-    const result = await translateToDialect(
+    const result = await translateText(
       text,
       target_language,
       target_dialect,

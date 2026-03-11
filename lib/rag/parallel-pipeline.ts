@@ -8,9 +8,9 @@
  * Performance improvement: ~60-70% faster than sequential pipeline
  */
 
-import { detectLanguage } from '@/lib/nlp/detect-language';
-import { rewriteQuery } from '@/lib/nlp/query-rewrite';
-import { getCachedEmbedding } from '@/lib/embeddings/cache'; // 使用缓存服务
+import { detectLanguage } from '@/lib/ai';
+import { rewriteQuery } from '@/lib/ai';
+import { getCachedEmbedding } from '@/lib/embeddings/cache';
 import { buildStructuredMemory } from '@/lib/nlp/structured-memory';
 
 export interface ParallelPipelineResult {

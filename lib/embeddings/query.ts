@@ -5,67 +5,48 @@
  * This ensures query embeddings are compatible with document embeddings in the database
  */
 
+import { pipeline, env } from '@xenova/transformers';
+
+// CRITICAL: Configure BEFORE any pipeline creation
+// This prevents the libonnxruntime.so.1.14.0 error on server
+env.backends.onnx.wasm.numThreads = 1;
+env.backends.onnx.wasm.simd = true;
+env.allowLocalModels = false;
+env.allowRemoteModels = true;
+env.useBrowserCache = false;
+env.cacheDir = '/tmp/.transformers-cache';
+
 const MODEL = 'Xenova/bge-small-en-v1.5'; // 384-dim
 const EMBEDDING_DIM = 384;
 
 let pipeline_instance: any = null;
 let isInitializing = false;
-let transformersModule: any = null;
 
 /**
- * Load transformers module dynamically
- */
-async function loadTransformers() {
-  if (transformersModule) return transformersModule;
-  
-  try {
-    const { pipeline, env } = await import('@xenova/transformers');
-    
-    // CRITICAL: Configure WASM backend BEFORE any pipeline creation
-    // This prevents the libonnxruntime.so.1.14.0 error
-    env.backends.onnx.wasm.numThreads = 1;
-    env.backends.onnx.wasm.simd = true;
-    env.allowLocalModels = false;
-    env.allowRemoteModels = true;
-    env.useBrowserCache = false;
-    env.cacheDir = '/tmp/.transformers-cache';
-    
-    transformersModule = { pipeline, env };
-    return transformersModule;
-  } catch (error) {
-    console.error('[Query Embeddings] Failed to load transformers:', error);
-    throw error;
-  }
-}
-
-/**
- * Initialize bge-small-en-v1.5 model
+ * Initialize bge-small-en-v1.5 model (384-dim)
  */
 async function initModel() {
   if (pipeline_instance) return pipeline_instance;
   
-  if (isInitializing) {
-    // Wait for initialization to complete
-    while (isInitializing) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return pipeline_instance;
+  while (isInitializing) {
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
+  
+  if (pipeline_instance) return pipeline_instance;
 
   try {
     isInitializing = true;
-    console.log('[Query Embeddings] Initializing bge-small-en-v1.5...');
-    
-    const { pipeline } = await loadTransformers();
+    console.log('[Query Embeddings] Initializing bge-small-en-v1.5 (384-dim) with WASM backend...');
     
     pipeline_instance = await pipeline('feature-extraction', MODEL, {
       quantized: true,
     });
     
-    console.log('[Query Embeddings] ✅ Model ready');
+    console.log('[Query Embeddings] ✅ bge-small-en-v1.5 model ready (WASM)');
     return pipeline_instance;
   } catch (error) {
-    console.error('[Query Embeddings] Failed to initialize model:', error);
+    console.error('[Query Embeddings] Failed to initialize bge-small-en-v1.5:', error);
+    pipeline_instance = null;
     throw error;
   } finally {
     isInitializing = false;

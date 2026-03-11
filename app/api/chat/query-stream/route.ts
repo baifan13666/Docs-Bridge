@@ -12,9 +12,9 @@
  */
 
 import { NextRequest } from 'next/server';
+import { streamText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
-import { Models } from '@/lib/langchain/openrouter';
-import { withRetry } from '@/lib/langchain/structured';
+import { createModelWithHealing, ModelPresets } from '@/lib/ai';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
@@ -38,7 +38,7 @@ interface SearchResult {
 }
 
 export async function POST(request: NextRequest) {
-  const requestId = `api-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const requestId = `api-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   console.log(`[RAG Stream] ========== NEW REQUEST - RequestID: ${requestId} ==========`);
   
   const encoder = new TextEncoder();
@@ -277,15 +277,13 @@ export async function POST(request: NextRequest) {
             .join('\n---\n\n');
         }
 
-        // Step 4: Stream LLM response with retry logic
+        // Step 4: Stream LLM response with Vercel AI SDK
         sendEvent('status', { step: 'generating', message: 'Generating answer...' });
 
-        // Create model with retry logic for rate limiting
-        const baseModel = model_mode === 'mini'
-          ? Models.trinityMini({ temperature: 0.7, maxTokens: 2048 })
-          : Models.trinityLarge({ temperature: 0.7, maxTokens: 2048 });
-        
-        const model = withRetry(baseModel);
+        // Create model with response healing (automatic retry + JSON repair)
+        const model = model_mode === 'mini'
+          ? createModelWithHealing(ModelPresets.TRINITY_MINI)
+          : createModelWithHealing(ModelPresets.TRINITY_LARGE);
 
         const memoryContext = structuredMemory 
           ? `\n\n${formatStructuredMemoryForPrompt(structuredMemory)}\n`
@@ -316,74 +314,36 @@ The user's question could not be matched with any documents in the knowledge bas
 Politely inform them that you don't have information about their specific question.
 ${queryAnalysis}${memoryContext}`;
 
-        const messages = [
-          { role: 'system' as const, content: systemPrompt },
-          { role: 'user' as const, content: query }
-        ];
-
         let fullResponse = '';
         let tokensUsed = 0;
-        let retryCount = 0;
-        const maxRetries = 3;
         let llmSuccess = false; // Track if LLM generation succeeded
 
-        // Retry loop for streaming with exponential backoff
-        while (retryCount < maxRetries) {
-          try {
-            // Stream the LLM response
-            const stream = await model.stream(messages);
-            
-            for await (const chunk of stream) {
-              const content = typeof chunk.content === 'string' 
-                ? chunk.content 
-                : JSON.stringify(chunk.content);
-              
-              fullResponse += content;
-              
-              // Send each chunk to the client
-              sendEvent('chunk', { content });
-            }
-
-            // Extract token usage (if available)
-            tokensUsed = Math.ceil(fullResponse.length / 4); // Rough estimate
-            
-            sendEvent('status', { step: 'complete', message: 'Response generated' });
-            llmSuccess = true; // Mark as successful
-            break; // Success, exit retry loop
-            
-          } catch (llmError: any) {
-            retryCount++;
-            console.error(`[RAG Stream] LLM error (attempt ${retryCount}/${maxRetries}):`, llmError);
-            
-            // Check if it's a rate limit error
-            const isRateLimit = llmError?.message?.includes('429') || 
-                               llmError?.status === 429 ||
-                               llmError?.code === 'rate_limit_exceeded';
-            
-            if (isRateLimit && retryCount < maxRetries) {
-              // Exponential backoff: 2^retryCount seconds
-              const delayMs = Math.pow(2, retryCount) * 1000;
-              console.log(`[RAG Stream] Rate limited, waiting ${delayMs}ms before retry...`);
-              sendEvent('status', { 
-                step: 'rate_limited', 
-                message: `Rate limited, retrying in ${delayMs / 1000}s...` 
-              });
-              
-              await new Promise(resolve => setTimeout(resolve, delayMs));
-              continue; // Retry
-            }
-            
-            // Non-rate-limit error or max retries reached
-            if (retryCount >= maxRetries) {
-              console.error('[RAG Stream] Max retries reached, giving up');
-              fullResponse = "I apologize, but I'm experiencing high demand right now. Please try again in a moment.";
-            } else {
-              fullResponse = "I apologize, but I encountered an error while processing your question. Please try again.";
-            }
-            
-            sendEvent('chunk', { content: fullResponse });
-            break; // Exit retry loop
+        try {
+          // Stream the LLM response using Vercel AI SDK
+          const result = await streamText({
+            model,
+            system: systemPrompt,
+            prompt: query,
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          });
+          
+          // Stream chunks to client
+          for await (const chunk of result.textStream) {
+            fullResponse += chunk;
+            sendEvent('chunk', { content: chunk });
           }
+
+          // Extract token usage (if available)
+          tokensUsed = Math.ceil(fullResponse.length / 4); // Rough estimate
+          
+          sendEvent('status', { step: 'complete', message: 'Response generated' });
+          llmSuccess = true; // Mark as successful
+          
+        } catch (llmError: any) {
+          console.error('[RAG Stream] LLM error:', llmError);
+          fullResponse = "I apologize, but I encountered an error while processing your question. Please try again.";
+          sendEvent('chunk', { content: fullResponse });
         }
 
         // Step 5: Calculate confidence score

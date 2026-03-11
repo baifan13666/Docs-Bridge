@@ -62,6 +62,7 @@ Multi-stage NLP pipeline that:
 
 ### AI/ML Stack
 - **LLM Provider**: OpenRouter (20 API keys for load balancing)
+- **AI Framework**: Vercel AI SDK 6.0.116 (streaming + structured output)
 - **Models**:
   - **Detection**: LFM 2.5 1.2B Thinking (fast classification)
   - **RAG Standard**: Trinity Large (complex reasoning)
@@ -71,13 +72,17 @@ Multi-stage NLP pipeline that:
   - **Query**: bge-small-en-v1.5 (384-dim) via @xenova/transformers
   - **Documents**: bge-small-en-v1.5 (384-dim) for coarse search
   - **Reranking**: bge-large-en-v1.5 (1024-dim) for precision
-- **LangChain**: @langchain/core, @langchain/openai, @langchain/textsplitters
+- **LangChain**: @langchain/textsplitters (document chunking only)
+- **Response Healing**: Automatic JSON repair and retry via @openrouter/ai-sdk-provider
+- **Architecture**: Vercel AI SDK for streaming, LangChain for workflow orchestration only
 
 ### Key Libraries
 - **@xenova/transformers**: 2.17.2 (browser-side embeddings)
 - **@browser-ai/transformers-js**: 2.1.6 (WebGPU support)
 - **zod**: 4.3.6 (schema validation)
 - **ai**: 6.0.116 (Vercel AI SDK)
+- **@openrouter/ai-sdk-provider**: OpenRouter integration with response healing
+- **@langchain/textsplitters**: Document chunking (only remaining LangChain usage)
 - **sonner**: 2.0.7 (toast notifications)
 
 ### Supported Languages
@@ -315,7 +320,9 @@ Phase 3 (Sequential):
 
 ### 5.3 Language Detection
 
-**Location**: `lib/nlp/detect-language.ts`
+**Location**: `lib/ai/detect-language.ts`
+
+**Framework**: Vercel AI SDK with `generateText()` + `Output.object()`
 
 **Model**: LFM 2.5 1.2B Thinking (fast classification)
 
@@ -343,9 +350,11 @@ Phase 3 (Sequential):
 
 ### 5.4 Query Rewriting
 
-**Location**: `lib/nlp/query-rewrite.ts`
+**Location**: `lib/ai/query-rewrite.ts`
 
-**Model**: LFM 2.5 1.2B Thinking
+**Framework**: Vercel AI SDK with `generateText()` + `Output.object()`
+
+**Model**: Trinity Mini (fast and efficient)
 
 **Purpose**: Expand queries for better semantic search
 
@@ -368,7 +377,9 @@ Keywords: ["flood relief", "disaster assistance", "emergency aid", "eligibility"
 
 ### 5.5 Text Simplification
 
-**Location**: `lib/nlp/simplify.ts`
+**Location**: `lib/ai/simplify.ts`
+
+**Framework**: Vercel AI SDK with `generateText()` + `Output.object()`
 
 **Model**: Trinity Mini
 
@@ -398,7 +409,9 @@ Difficult Words:
 
 ### 5.6 Recursive Summarization
 
-**Location**: `lib/nlp/summarize.ts`
+**Location**: `lib/ai/summarize.ts`
+
+**Framework**: Vercel AI SDK with `generateText()` + `Output.object()`
 
 **Model**: Trinity Mini
 
@@ -437,7 +450,9 @@ Difficult Words:
 
 ### 5.7 Dialect Translation
 
-**Location**: `lib/nlp/translate.ts`
+**Location**: `lib/ai/translate.ts`
+
+**Framework**: Vercel AI SDK with `generateText()` + `Output.object()`
 
 **Model**: Trinity Mini
 
@@ -589,24 +604,23 @@ docs-bridge/
 │   │   ├── kb.ts
 │   │   ├── nlp.ts
 │   │   └── user.ts
+│   ├── ai/                       # Vercel AI SDK integration
+│   │   ├── index.ts              # Main exports
+│   │   ├── openrouter.ts         # OpenRouter config with healing
+│   │   ├── schemas.ts            # Zod schemas
+│   │   ├── detect-language.ts    # Language detection
+│   │   ├── query-rewrite.ts      # Query optimization
+│   │   ├── simplify.ts           # Text simplification
+│   │   ├── summarize.ts          # Summarization
+│   │   └── translate.ts          # Translation
 │   ├── embeddings/               # Embedding system
 │   │   ├── cache.ts              # Intelligent caching
 │   │   ├── query.ts              # Query embeddings
 │   │   └── README.md
-│   ├── langchain/                # LangChain integration
-│   │   ├── index.ts              # Main exports
-│   │   ├── openrouter.ts         # OpenRouter config
-│   │   ├── schemas.ts            # Zod schemas
-│   │   └── structured.ts         # Structured output
-│   ├── nlp/                      # NLP processing
-│   │   ├── chunking.ts           # Document chunking
+│   ├── nlp/                      # NLP processing (LangChain workflows only)
+│   │   ├── chunking.ts           # Document chunking (LangChain)
 │   │   ├── confidence-score.ts   # Confidence calculation
-│   │   ├── detect-language.ts    # Language detection
-│   │   ├── query-rewrite.ts      # Query optimization
-│   │   ├── simplify.ts           # Text simplification
-│   │   ├── structured-memory.ts  # Conversation memory
-│   │   ├── summarize.ts          # Summarization
-│   │   └── translate.ts          # Translation
+│   │   └── structured-memory.ts  # Conversation memory
 │   ├── rag/                      # RAG pipeline
 │   │   └── parallel-pipeline.ts  # Parallel execution
 │   ├── supabase/                 # Supabase integration
@@ -697,7 +711,7 @@ docs-bridge/
 - `lib/embeddings/cache.ts`
 - `lib/nlp/confidence-score.ts`
 - `lib/nlp/structured-memory.ts`
-- `lib/langchain/openrouter.ts`
+- `lib/ai/openrouter.ts`
 
 ---
 
@@ -899,6 +913,8 @@ docs-bridge/
 
 **Purpose**: Detect language and dialect
 
+**Framework**: Uses `lib/ai/detect-language.ts` (Vercel AI SDK)
+
 **Request**:
 ```typescript
 {
@@ -926,6 +942,8 @@ docs-bridge/
 **File**: `app/api/nlp/simplify/route.ts`
 
 **Purpose**: Simplify text to target reading level
+
+**Framework**: Uses `lib/ai/simplify.ts` (Vercel AI SDK)
 
 **Request**:
 ```typescript
@@ -965,6 +983,8 @@ docs-bridge/
 
 **Purpose**: Summarize text into bullet points and key actions
 
+**Framework**: Uses `lib/ai/summarize.ts` (Vercel AI SDK)
+
 **Request**:
 ```typescript
 {
@@ -997,6 +1017,8 @@ docs-bridge/
 **File**: `app/api/nlp/translate/route.ts`
 
 **Purpose**: Translate to target language/dialect
+
+**Framework**: Uses `lib/ai/translate.ts` (Vercel AI SDK)
 
 **Request**:
 ```typescript

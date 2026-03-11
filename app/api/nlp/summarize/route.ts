@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { summarizeText } from '@/lib/nlp/summarize';
+import { summarizeText } from '@/lib/ai';
 
 // Route segment config
 export const runtime = 'nodejs';

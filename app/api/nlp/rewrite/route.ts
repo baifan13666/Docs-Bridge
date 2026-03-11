@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { rewriteQuery } from '@/lib/nlp/query-rewrite';
+import { rewriteQuery } from '@/lib/ai';
 
 // Route segment config
 export const runtime = 'nodejs';

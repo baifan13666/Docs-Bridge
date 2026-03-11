@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { simplifyText } from '@/lib/nlp/simplify';
+import { simplifyText } from '@/lib/ai';
 
 // Route segment config
 export const runtime = 'nodejs';

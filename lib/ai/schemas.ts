@@ -1,7 +1,7 @@
 /**
- * Zod Schemas for LangChain Structured Output
+ * Zod Schemas for Vercel AI SDK Structured Output
  * 
- * OpenRouter-compatible schemas with flexible validation
+ * All schemas with flexible validation for better compatibility
  */
 
 import { z } from "zod";
@@ -27,29 +27,12 @@ export const LanguageDetectionSchema = z.object({
 });
 
 /**
- * Dialect Normalization Schemas
- */
-export const NormalizationChangeSchema = z.object({
-  from: z.string(),
-  to: z.string(),
-  reason: z.string(),
-});
-
-export const NormalizationResultSchema = z.object({
-  normalized: z.string(),
-  changes: z.array(NormalizationChangeSchema),
-  confidence: confidenceSchema,
-  should_normalize: z.boolean(),
-});
-
-/**
  * Text Simplification Schemas
  */
 export const DifficultWordSchema = z.object({
   word: z.string(),
   explanation: z.string(),
   simpler_alternative: z.string(),
-  // Changed from position (unreliable) to context snippet
   context_snippet: z.string().optional(),
 });
 
@@ -94,8 +77,6 @@ export const QueryRewriteSchema = z.object({
  * Export inferred types
  */
 export type LanguageDetection = z.infer<typeof LanguageDetectionSchema>;
-export type NormalizationChange = z.infer<typeof NormalizationChangeSchema>;
-export type NormalizationResult = z.infer<typeof NormalizationResultSchema>;
 export type DifficultWord = z.infer<typeof DifficultWordSchema>;
 export type SimplificationResult = z.infer<typeof SimplificationResultSchema>;
 export type SummarizationResult = z.infer<typeof SummarizationResultSchema>;

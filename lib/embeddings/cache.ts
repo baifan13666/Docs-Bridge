@@ -38,9 +38,10 @@ function normalizeQuery(query: string): string {
   return query
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, ' ') // 多个空格变成单个空格
-    .replace(/[^\w\s]/g, '') // 移除标点符号
-    .replace(/\b(how|to|what|is|are|can|i|the|a|an)\b/g, '') // 移除常见停用词
+    .replace(/\s+/g, ' ') // Multiple spaces to single space
+    // Don't remove non-ASCII characters - keep Unicode for multilingual support
+    .replace(/[^\p{L}\p{N}\s]/gu, '') // Remove punctuation but keep letters and numbers (Unicode-aware)
+    .replace(/\b(how|to|what|is|are|can|i|the|a|an)\b/g, '') // Remove common English stopwords
     .trim();
 }
 

@@ -12,8 +12,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { generateText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
-import { Models } from '@/lib/langchain/openrouter';
+import { createModelWithHealing, ModelPresets } from '@/lib/ai';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 import { executeParallelPipeline, executeDualEmbeddingSearch } from '@/lib/rag/parallel-pipeline';
@@ -153,21 +154,15 @@ export async function POST(request: NextRequest) {
       console.log('[RAG Query] ⚠️ No context available - will use fallback prompt');
     }
 
-    // Step 6: Call LLM with RAG context (using LangChain)
+    // Step 6: Call LLM with RAG context (using Vercel AI SDK)
     console.log('[RAG Query] Step 6: Calling LLM with RAG context...');
     console.log(`[RAG Query] Model mode: ${model_mode}`);
     const llmStartTime = Date.now();
 
-    // Create LangChain model based on user preference
+    // Create model with response healing (automatic retry + JSON repair)
     const model = model_mode === 'mini'
-      ? Models.trinityMini({
-          temperature: 0.7,
-          maxTokens: 2048,
-        })
-      : Models.trinityLarge({
-          temperature: 0.7,
-          maxTokens: 2048,
-        });
+      ? createModelWithHealing(ModelPresets.TRINITY_MINI)
+      : createModelWithHealing(ModelPresets.TRINITY_LARGE);
 
     // Build system prompt with structured memory (already available from parallel pipeline)
     const memoryContext = pipelineResult.structuredMemory 
@@ -200,26 +195,24 @@ Query Analysis:
 - Rewritten: "${pipelineResult.rewrittenQuery}"
 ${memoryContext}`;
 
-    // Call LLM
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: query }
-    ];
-
     let assistantResponse: string;
     let tokensUsed = 0;
     try {
       console.log('[RAG Query] 🤖 Invoking LLM...');
-      const response = await model.invoke(messages);
-      assistantResponse = typeof response.content === 'string' 
-        ? response.content 
-        : JSON.stringify(response.content);
+      const result = await generateText({
+        model,
+        system: systemPrompt,
+        prompt: query,
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      });
       
-      // Extract token usage from response metadata
-      if (response.response_metadata?.tokenUsage) {
-        const usage = response.response_metadata.tokenUsage as any;
-        tokensUsed = (usage.promptTokens || 0) + (usage.completionTokens || 0);
-        console.log(`[RAG Query] 📊 Token usage: ${tokensUsed} (prompt: ${usage.promptTokens}, completion: ${usage.completionTokens})`);
+      assistantResponse = result.text;
+      
+      // Extract token usage from response
+      if (result.usage) {
+        tokensUsed = result.usage.promptTokens + result.usage.completionTokens;
+        console.log(`[RAG Query] 📊 Token usage: ${tokensUsed} (prompt: ${result.usage.promptTokens}, completion: ${result.usage.completionTokens})`);
       }
       
       const llmTime = Date.now() - llmStartTime;
