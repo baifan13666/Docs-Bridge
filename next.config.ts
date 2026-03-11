@@ -18,16 +18,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Explicitly mark transformers as external for server (though it's already in default list)
+  serverExternalPackages: ['@huggingface/transformers'],
   // Note: Do NOT use output: "export" when you have API routes
   // The official tutorial uses it for client-side only apps
   webpack: (config, { isServer }) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      sharp$: false,
-      "onnxruntime-node$": false,
-    };
-    
-    // Exclude transformers from server-side bundle
+    // Ignore transformers and related packages on server-side
     if (isServer) {
       config.externals = config.externals || [];
       config.externals.push({
@@ -35,6 +31,11 @@ const nextConfig: NextConfig = {
       });
     }
     
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      sharp$: false,
+      "onnxruntime-node$": false,
+    };
     return config;
   }
 };
