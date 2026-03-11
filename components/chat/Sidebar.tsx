@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import UserSettingsModal from '../settings/UserSettingsModal';
+import SignInModal from '../auth/SignInModal';
 import PerfectScrollbarWrapper from '../ui/PerfectScrollbar';
 import * as chatApi from '@/lib/api/chat';
 
@@ -44,6 +45,7 @@ export default function Sidebar({
   const t = useTranslations();
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
   const [initialTab, setInitialTab] = useState<'account' | 'plan' | 'usage' | 'notifications'>('account');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [officialGovFolder, setOfficialGovFolder] = useState<Folder | null>(null);
@@ -372,7 +374,7 @@ export default function Sidebar({
                 {t('chat.signInToSaveHistory')}
               </p>
               <button
-                onClick={() => setShowSettings(true)}
+                onClick={() => setShowSignIn(true)}
                 className="w-full max-w-[200px] flex items-center justify-center gap-2 px-4 py-2.5 bg-(--color-accent) text-white rounded-lg hover:bg-(--color-accent-hover) transition-colors font-medium cursor-pointer shadow-sm"
               >
                 <span className="material-symbols-outlined text-[20px]">login</span>
@@ -444,6 +446,12 @@ export default function Sidebar({
           userName={userName}
           userPlan={userPlan}
           initialTab={initialTab}
+        />
+      )}
+
+      {showSignIn && (
+        <SignInModal
+          onClose={() => setShowSignIn(false)}
         />
       )}
     </>
