@@ -19,12 +19,18 @@ const nextConfig: NextConfig = {
     ],
   },
   // Exclude node-specific modules from webpack bundle for @xenova/transformers
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       "sharp$": false,
       "onnxruntime-node$": false,
     };
+    
+    // Ignore sharp module completely to prevent loading issues
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'sharp'];
+    }
+    
     return config;
   },
   // Indicate that these packages should not be bundled by webpack for server components
