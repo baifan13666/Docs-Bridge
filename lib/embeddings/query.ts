@@ -46,77 +46,9 @@ async function checkTransformersAvailability() {
       return { pipeline, env };
     }
   } catch (error) {
-    console.warn('[Query Embeddings] Transformers not available, will use fallback API:', error instanceof Error ? error.message : String(error));
+    console.warn('[Query Embeddings] Transformers not available:', error instanceof Error ? error.message : String(error));
     transformersAvailable = false;
     return null;
-  }
-}
-
-/**
- * Initialize bge-small-en-v1.5 model (384-dim)
- */
-async function initModel() {
-  if (pipeline_instance) return pipeline_instance;
-  
-  while (isInitializing) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  
-  if (pipeline_instance) return pipeline_instance;
-
-  try {
-    isInitializing = true;
-    console.log('[Query Embeddings] Initializing bge-small-en-v1.5 (384-dim) with WASM backend...');
-    
-    const transformers = await checkTransformersAvailability();
-    if (!transformers) {
-      throw new Error('Transformers not available');
-    }
-    
-    pipeline_instance = await transformers.pipeline('feature-extraction', MODEL, {
-      quantized: true,
-    });
-    
-    console.log('[Query Embeddings] ✅ bge-small-en-v1.5 model ready (WASM)');
-    return pipeline_instance;
-  } catch (error) {
-    console.error('[Query Embeddings] Failed to initialize bge-small-en-v1.5:', error);
-    pipeline_instance = null;
-    throw error;
-  } finally {
-    isInitializing = false;
-  }
-}
-
-/**
- * Fallback API call for embedding generation
- */
-async function generateEmbeddingViaAPI(query: string): Promise<number[]> {
-  try {
-    console.log('[Query Embeddings] Using API fallback for embedding generation');
-    
-    const response = await fetch('/api/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text: query }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API call failed: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.embedding || !Array.isArray(data.embedding)) {
-      throw new Error('Invalid embedding response from API');
-    }
-    
-    return data.embedding;
-  } catch (error) {
-    console.error('[Query Embeddings] API fallback failed:', error);
-    throw new Error(`Failed to generate embedding via API: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -126,34 +58,53 @@ async function generateEmbeddingViaAPI(query: string): Promise<number[]> {
  */
 export async function generateQueryEmbedding(query: string): Promise<number[]> {
   try {
-    // First try to use local transformers
-    if (transformersAvailable !== false) {
-      try {
-        const model = await initModel();
-        
-        console.log(`[Query Embeddings] Generating embedding for: "${query.substring(0, 50)}..."`);
-        
-        const output = await model(query, {
-          pooling: 'mean',
-          normalize: true,
-        });
-        
-        const embedding = Array.from(output.data) as number[];
-        
-        if (embedding.length !== EMBEDDING_DIM) {
-          throw new Error(`Expected ${EMBEDDING_DIM}-dim embedding, got ${embedding.length}-dim`);
+    // Try to use local transformers
+    const transformers = await checkTransformersAvailability();
+    if (!transformers) {
+      throw new Error('Transformers library not available - this may be due to missing native dependencies like sharp');
+    }
+    
+    // Initialize model if needed
+    if (!pipeline_instance) {
+      while (isInitializing) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      if (!pipeline_instance) {
+        try {
+          isInitializing = true;
+          console.log('[Query Embeddings] Initializing bge-small-en-v1.5 (384-dim) with WASM backend...');
+          
+          pipeline_instance = await transformers.pipeline('feature-extraction', MODEL, {
+            quantized: true,
+          });
+          
+          console.log('[Query Embeddings] ✅ bge-small-en-v1.5 model ready (WASM)');
+        } catch (error) {
+          console.error('[Query Embeddings] Failed to initialize bge-small-en-v1.5:', error);
+          pipeline_instance = null;
+          throw error;
+        } finally {
+          isInitializing = false;
         }
-        
-        console.log(`[Query Embeddings] ✅ Generated ${embedding.length}-dim embedding (local)`);
-        return embedding;
-      } catch (localError) {
-        console.warn('[Query Embeddings] Local generation failed, trying API fallback:', localError instanceof Error ? localError.message : String(localError));
-        transformersAvailable = false;
       }
     }
     
-    // Fallback to API call
-    return await generateEmbeddingViaAPI(query);
+    console.log(`[Query Embeddings] Generating embedding for: "${query.substring(0, 50)}..."`);
+    
+    const output = await pipeline_instance(query, {
+      pooling: 'mean',
+      normalize: true,
+    });
+    
+    const embedding = Array.from(output.data) as number[];
+    
+    if (embedding.length !== EMBEDDING_DIM) {
+      throw new Error(`Expected ${EMBEDDING_DIM}-dim embedding, got ${embedding.length}-dim`);
+    }
+    
+    console.log(`[Query Embeddings] ✅ Generated ${embedding.length}-dim embedding`);
+    return embedding;
   } catch (error) {
     console.error('[Query Embeddings] Error generating embedding:', error);
     throw new Error(`Failed to generate query embedding: ${error instanceof Error ? error.message : 'Unknown error'}`);
