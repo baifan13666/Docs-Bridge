@@ -18,8 +18,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Explicitly mark transformers as external for server (though it's already in default list)
-  serverExternalPackages: ['@huggingface/transformers'],
+  // Explicitly mark transformers and onnxruntime as external for server
+  serverExternalPackages: [
+    '@huggingface/transformers',
+    'onnxruntime-common',
+    'onnxruntime-web',
+    'onnxruntime-node'
+  ],
   // Note: Do NOT use output: "export" when you have API routes
   // The official tutorial uses it for client-side only apps
   webpack: (config, { isServer }) => {
@@ -28,6 +33,9 @@ const nextConfig: NextConfig = {
       config.externals = config.externals || [];
       config.externals.push({
         '@huggingface/transformers': 'commonjs @huggingface/transformers',
+        'onnxruntime-common': 'commonjs onnxruntime-common',
+        'onnxruntime-web': 'commonjs onnxruntime-web',
+        'onnxruntime-node': 'commonjs onnxruntime-node',
       });
     }
     
@@ -35,6 +43,8 @@ const nextConfig: NextConfig = {
       ...config.resolve.alias,
       sharp$: false,
       "onnxruntime-node$": false,
+      "onnxruntime-common$": false,
+      "onnxruntime-web$": false,
     };
     return config;
   }
