@@ -20,12 +20,21 @@ const nextConfig: NextConfig = {
   },
   // Note: Do NOT use output: "export" when you have API routes
   // The official tutorial uses it for client-side only apps
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       sharp$: false,
       "onnxruntime-node$": false,
     };
+    
+    // Exclude transformers from server-side bundle
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        '@huggingface/transformers': 'commonjs @huggingface/transformers',
+      });
+    }
+    
     return config;
   }
 };
