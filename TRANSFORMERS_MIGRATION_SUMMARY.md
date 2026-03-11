@@ -24,6 +24,15 @@
 "onnxruntime-common": "^1.24.3"
 ```
 
+**CRITICAL: npm overrides** (prevents native onnxruntime-node installation):
+```json
+"overrides": {
+  "onnxruntime-node": "npm:onnxruntime-web@^1.24.3"
+}
+```
+
+This override forces `@huggingface/transformers` to use `onnxruntime-web` instead of the native `onnxruntime-node`, which prevents the "libonnxruntime.so.1: cannot open shared object file" error on Vercel.
+
 ### 2. Code Updates
 
 **File**: `lib/embeddings/query.ts`
@@ -142,23 +151,25 @@ Save to cache → Return embedding
 ## Why WASM Backend?
 
 ### Problem with Native Backend
-The previous error was:
+The error was:
 ```
-Cannot find module '../build/Release/sharp-linux-x64.node'
-libonnxruntime.so.1.14.0: cannot open shared object file
+Error: libonnxruntime.so.1: cannot open shared object file: No such file or directory
 ```
 
 This happened because:
-1. Vercel's serverless environment doesn't have native ONNX runtime libraries
-2. The old `@xenova/transformers` tried to use `onnxruntime-node` (native)
-3. Native `.node` binaries and `.so` shared libraries aren't available
+1. `@huggingface/transformers` has `onnxruntime-node` as a dependency
+2. `onnxruntime-node` requires native `.so` shared libraries (libonnxruntime.so.1)
+3. Vercel's serverless environment doesn't have these native libraries
+4. Even with webpack aliases, the package was still installed and tried to load at runtime
 
-### Solution: WASM Backend
-By using `@huggingface/transformers` v3 with WASM:
-1. No native dependencies required
+### Solution: npm overrides + WASM Backend
+By using npm overrides to replace `onnxruntime-node` with `onnxruntime-web`:
+1. No native dependencies installed
 2. Runs entirely in JavaScript/WebAssembly
-3. Works in any serverless environment
-4. Slightly slower than native, but more portable
+3. Works in any serverless environment (Vercel, AWS Lambda, etc.)
+4. Slightly slower than native, but fully portable
+
+**The key insight**: Webpack aliases alone aren't enough - you must prevent the native package from being installed in the first place using npm overrides.
 
 ---
 
@@ -223,19 +234,29 @@ Deploy and verify:
 
 ## Troubleshooting
 
-### If Vercel deployment fails with "Cannot find package 'onnxruntime-common'"
+### If Vercel deployment fails with "libonnxruntime.so.1: cannot open shared object file"
 
-**Cause**: Dependencies not properly installed in deployment
+**Cause**: `onnxruntime-node` (native) is being installed instead of `onnxruntime-web` (WASM)
 
-**Solution**:
+**Solution**: Verify `package.json` has the npm override:
+```json
+"overrides": {
+  "onnxruntime-node": "npm:onnxruntime-web@^1.24.3"
+}
+```
+
+Then reinstall and redeploy:
 ```bash
-# Ensure dependencies are in package.json (not devDependencies)
-npm install @huggingface/transformers onnxruntime-web onnxruntime-common
-
-# Commit and redeploy
+npm install
 git add package.json package-lock.json
-git commit -m "Add onnxruntime dependencies"
+git commit -m "Force onnxruntime-web via npm overrides"
 git push
+```
+
+Verify the override is working:
+```bash
+npm ls onnxruntime-node
+# Should show: onnxruntime-node@npm:onnxruntime-web@1.24.3 overridden
 ```
 
 ### If you see "libonnxruntime.so" errors

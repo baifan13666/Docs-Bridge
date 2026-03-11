@@ -44,5 +44,8 @@
   },
   "optionalDependencies": {
     "sharp": "^0.33.5"
+  },
+  "overrides": {
+    "onnxruntime-node": "npm:onnxruntime-web@^1.24.3"
   }
 }
