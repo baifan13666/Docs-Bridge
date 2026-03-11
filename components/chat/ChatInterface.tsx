@@ -15,7 +15,7 @@ import { useRAGQuery } from '@/hooks/useRAGQuery';
 import { useVoiceOutput } from '@/hooks/useVoiceOutput';
 import { useStreamingRAG } from '@/hooks/useStreamingRAG';
 import { useStreamingSettings } from '@/hooks/useStreamingSettings';
-import { useEmbedding } from '@/hooks/useEmbedding';
+import { useClientEmbedding } from '@/hooks/useClientEmbedding';
 
 interface ChatInterfaceProps {
   isAuthenticated: boolean;
@@ -135,7 +135,7 @@ export default function ChatInterface({
   const { executeRAGQuery } = useRAGQuery();
   const { isSupported: voiceOutputSupported, isSpeaking, missingVoiceWarning, speak, stop: stopSpeaking } = useVoiceOutput();
   const { streamingEnabled } = useStreamingSettings();
-  const { embed: generateEmbedding } = useEmbedding();
+  const { generateEmbedding } = useClientEmbedding();
   const { 
     isStreaming, 
     streamedContent, 
@@ -308,7 +308,8 @@ export default function ChatInterface({
     
     // Generate embedding for query using the hook
     updatePipelineStep(3, 'active');
-    const embedding = await generateEmbedding(queryText);
+    const embeddingResult = await generateEmbedding(queryText);
+    const embedding = embeddingResult.embedding;
     updatePipelineStep(3, 'completed');
     
     // Create temporary streaming message

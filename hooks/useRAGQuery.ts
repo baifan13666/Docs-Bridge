@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as chatApi from '@/lib/api/chat';
-import { useEmbedding } from './useEmbedding';
+import { useClientEmbedding } from './useClientEmbedding';
 
 interface Message {
   id: string;
@@ -32,7 +32,7 @@ interface RAGQueryOptions {
 
 export function useRAGQuery() {
   const [querying, setQuerying] = useState(false);
-  const { embed } = useEmbedding();
+  const { generateEmbedding } = useClientEmbedding();
 
   async function executeRAGQuery(
     queryText: string,
@@ -62,7 +62,8 @@ export function useRAGQuery() {
       
       // Generate query embedding for backward compatibility (parallel pipeline will generate its own)
       console.log('[useRAGQuery] Generating fallback embedding...');
-      const queryEmbedding = await embed(queryText);
+      const embeddingResult = await generateEmbedding(queryText);
+      const queryEmbedding = embeddingResult.embedding;
       
       onStepUpdate?.(1, 'completed', 'Language detected');
       onStepUpdate?.(2, 'completed', 'Query optimized');
