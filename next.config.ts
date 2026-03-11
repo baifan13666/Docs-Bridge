@@ -18,18 +18,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Configure webpack for @huggingface/transformers
-  // Based on official Transformers.js documentation for Next.js 16
+  // Note: Do NOT use output: "export" when you have API routes
+  // The official tutorial uses it for client-side only apps
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "sharp$": false,
+      sharp$: false,
       "onnxruntime-node$": false,
     };
     return config;
-  },
-  // Prevent webpack from bundling server-side packages (Next.js 16+)
-  serverExternalPackages: ['sharp', 'onnxruntime-node'],
+  }
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
