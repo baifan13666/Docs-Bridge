@@ -6,10 +6,13 @@
  * - Semantic similarity matching via templates
  * - Cache hit tracking and analytics
  * - Automatic cache warming
+ * 
+ * NOTE: This module NO LONGER generates embeddings server-side.
+ * All embedding generation happens client-side in the browser.
+ * This module only handles cache lookup and storage.
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { generateQueryEmbedding } from './query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface CachedEmbedding {
@@ -77,19 +80,21 @@ function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 /**
- * Get cached embedding or generate new one
+ * Get cached embedding (lookup only - does NOT generate)
  * 
  * Flow:
  * 1. Check exact hash match in cache
  * 2. If not found, check semantic similarity with templates
- * 3. If no good template match, generate new embedding
- * 4. Cache the result for future use
+ * 3. Return null if no match found (client must generate)
+ * 
+ * NOTE: This function NO LONGER generates embeddings.
+ * If no cache hit, return null and let client generate.
  */
 export async function getCachedEmbedding(
   query: string,
   language?: string,
   dialect?: string
-): Promise<CachedEmbedding> {
+): Promise<CachedEmbedding | null> {
   const supabase = await createClient();
   const queryHash = await generateQueryHash(query);
   const normalizedQuery = normalizeQuery(query);
@@ -152,87 +157,27 @@ export async function getCachedEmbedding(
     console.warn('[Embedding Cache] Template matching error:', error);
   }
 
-  // Step 3: Generate new embedding
-  console.log('[Embedding Cache] 🔄 Generating new embedding...');
-  const startTime = Date.now();
-  
-  try {
-    const embedding = await generateQueryEmbedding(query);
-    const generationTime = Date.now() - startTime;
-    
-    console.log(`[Embedding Cache] ✅ New embedding generated in ${generationTime}ms`);
-    
-    // Cache the new embedding
-    await cacheEmbedding(query, embedding, language, dialect, queryHash);
-    
-    return {
-      embedding,
-      language,
-      dialect,
-      isFromCache: false,
-      cacheSource: 'generated'
-    };
-  } catch (error) {
-    console.error('[Embedding Cache] ❌ Failed to generate embedding:', error);
-    throw error;
-  }
+  // Step 3: No cache hit - return null (client will generate)
+  console.log('[Embedding Cache] ❌ No cache hit - client must generate embedding');
+  return null;
 }
 
 /**
  * Find best matching template using semantic similarity
+ * 
+ * NOTE: Template matching is disabled because it requires generating
+ * an embedding for the query, which we no longer do server-side.
+ * Templates are still useful for pre-cached common queries.
  */
 async function findBestTemplate(
   query: string,
   language?: string,
   minSimilarity: number = 0.85 // 85% similarity threshold
 ): Promise<(QueryTemplate & { similarity: number }) | null> {
-  const supabase = await createClient();
-  
-  try {
-    // Get active templates, prioritize by language match
-    const { data: templates, error } = await supabase
-      .from('query_templates')
-      .select('id, template_text, embedding, category, language, priority')
-      .eq('is_active', true)
-      .order('priority', { ascending: false })
-      .limit(50); // Limit for performance
-
-    if (error || !templates || templates.length === 0) {
-      console.log('[Embedding Cache] No templates available');
-      return null;
-    }
-
-    // Generate embedding for the query to compare with templates
-    const queryEmbedding = await generateQueryEmbedding(query);
-    
-    let bestMatch: (QueryTemplate & { similarity: number }) | null = null;
-    let bestSimilarity = minSimilarity;
-
-    for (const template of templates) {
-      const similarity = cosineSimilarity(queryEmbedding, template.embedding);
-      
-      // Boost similarity for language match
-      const languageBoost = (language && template.language === language) ? 0.05 : 0;
-      const adjustedSimilarity = similarity + languageBoost;
-      
-      if (adjustedSimilarity > bestSimilarity) {
-        bestSimilarity = adjustedSimilarity;
-        bestMatch = {
-          ...template,
-          similarity: adjustedSimilarity
-        };
-      }
-    }
-
-    if (bestMatch) {
-      console.log(`[Embedding Cache] Best template: "${bestMatch.template_text}" (${(bestMatch.similarity * 100).toFixed(1)}%)`);
-    }
-
-    return bestMatch;
-  } catch (error) {
-    console.error('[Embedding Cache] Template matching error:', error);
-    return null;
-  }
+  // Template matching disabled - would require server-side embedding generation
+  // Templates are still useful as pre-cached queries (exact hash match)
+  console.log('[Embedding Cache] Template similarity matching disabled (requires client-side generation)');
+  return null;
 }
 
 /**
@@ -276,68 +221,22 @@ async function cacheEmbedding(
 
 /**
  * Preload common query templates
+ * 
+ * NOTE: This function is deprecated because it requires server-side
+ * embedding generation. Use client-side cache warming instead.
+ * 
+ * To warm up cache:
+ * 1. User visits app (client-side model loads)
+ * 2. Background task generates embeddings for common queries
+ * 3. Embeddings are cached via API for future use
  */
 export async function warmupQueryTemplates(supabase?: SupabaseClient): Promise<void> {
-  const client = supabase || (await createClient());
+  console.log('[Embedding Cache] ⚠️ Server-side template warmup is deprecated');
+  console.log('[Embedding Cache] Please use client-side cache warming instead');
+  console.log('[Embedding Cache] See CLIENT_EMBEDDING_GUIDE.md for details');
   
-  const commonTemplates = [
-    // English templates
-    { text: "how to apply for bantuan", category: "application", language: "en" },
-    { text: "what is bantuan eligibility", category: "eligibility", language: "en" },
-    { text: "bantuan application process", category: "application", language: "en" },
-    { text: "how to check bantuan status", category: "status", language: "en" },
-    { text: "bantuan requirements documents", category: "requirements", language: "en" },
-    
-    // Malay templates
-    { text: "cara mohon bantuan", category: "application", language: "ms" },
-    { text: "syarat kelayakan bantuan", category: "eligibility", language: "ms" },
-    { text: "proses permohonan bantuan", category: "application", language: "ms" },
-    { text: "semak status bantuan", category: "status", language: "ms" },
-    { text: "dokumen diperlukan bantuan", category: "requirements", language: "ms" },
-    
-    // Mixed/Common patterns
-    { text: "bantuan sara hidup", category: "living_aid", language: "ms" },
-    { text: "emergency assistance", category: "emergency", language: "en" },
-    { text: "financial aid application", category: "financial", language: "en" },
-  ];
-
-  console.log('[Embedding Cache] 🔥 Warming up query templates...');
-  
-  for (const template of commonTemplates) {
-    try {
-      // Check if template already exists
-      const { data: existing } = await client
-        .from('query_templates')
-        .select('id')
-        .eq('template_text', template.text)
-        .single();
-
-      if (!existing) {
-        // Generate embedding for template
-        const embedding = await generateQueryEmbedding(template.text);
-        
-        // Insert template
-        const { error } = await client
-          .from('query_templates')
-          .insert({
-            template_text: template.text,
-            embedding: embedding,
-            category: template.category,
-            language: template.language
-          });
-
-        if (error) {
-          console.error(`[Embedding Cache] Failed to insert template "${template.text}":`, error);
-        } else {
-          console.log(`[Embedding Cache] ✅ Template cached: "${template.text}"`);
-        }
-      }
-    } catch (error) {
-      console.error(`[Embedding Cache] Error processing template "${template.text}":`, error);
-    }
-  }
-  
-  console.log('[Embedding Cache] 🔥 Template warmup completed');
+  // Return immediately - no server-side generation
+  return;
 }
 
 /**

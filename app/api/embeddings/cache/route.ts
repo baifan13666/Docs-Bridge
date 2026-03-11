@@ -53,7 +53,10 @@ export async function GET() {
 /**
  * POST /api/embeddings/cache/warmup
  * 
- * Warm up query templates cache
+ * DEPRECATED: Server-side cache warming is no longer supported.
+ * Use client-side cache warming instead.
+ * 
+ * See CLIENT_EMBEDDING_GUIDE.md for client-side cache warming strategy.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -68,17 +71,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[Cache API] Starting template warmup...');
-    
-    // Warm up query templates
-    await warmupQueryTemplates();
-    
-    console.log('[Cache API] Template warmup completed');
+    console.log('[Cache API] ⚠️ Server-side warmup is deprecated');
 
     return NextResponse.json({
-      success: true,
-      message: 'Query templates warmed up successfully'
-    });
+      success: false,
+      message: 'Server-side cache warming is deprecated. Use client-side warming instead.',
+      recommendation: 'See CLIENT_EMBEDDING_GUIDE.md for client-side cache warming strategy'
+    }, { status: 410 }); // 410 Gone - feature no longer available
   } catch (error) {
     console.error('[Cache API] Warmup error:', error);
     

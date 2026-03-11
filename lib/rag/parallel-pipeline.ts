@@ -104,6 +104,12 @@ export async function executeParallelPipeline(
       try {
         const cachedResult = await getCachedEmbedding(query);
         timings.originalEmbedding = Date.now() - embStart;
+        
+        if (!cachedResult) {
+          // No cache hit - client must provide embedding
+          throw new Error('No cached embedding available. Client must generate embedding first.');
+        }
+        
         console.log(`[Parallel Pipeline] ✅ Original embedding ${cachedResult.isFromCache ? 'from cache' : 'generated'} (${cachedResult.embedding.length}-dim) in ${timings.originalEmbedding}ms`);
         if (cachedResult.isFromCache) {
           console.log(`[Parallel Pipeline] 🚀 Cache source: ${cachedResult.cacheSource}${cachedResult.similarity ? ` (similarity: ${(cachedResult.similarity * 100).toFixed(1)}%)` : ''}`);
@@ -191,9 +197,15 @@ export async function executeParallelPipeline(
         language.language,
         language.dialect ?? undefined
       );
-      console.log(`[Parallel Pipeline] ✅ Rewritten embedding ${rewrittenEmbResult.isFromCache ? 'from cache' : 'generated'} (${rewrittenEmbResult.embedding.length}-dim)`);
-      if (rewrittenEmbResult.isFromCache) {
-        console.log(`[Parallel Pipeline] 🚀 Cache source: ${rewrittenEmbResult.cacheSource}${rewrittenEmbResult.similarity ? ` (similarity: ${(rewrittenEmbResult.similarity * 100).toFixed(1)}%)` : ''}`);
+      
+      if (!rewrittenEmbResult) {
+        console.warn('[Parallel Pipeline] ⚠️ No cached embedding for rewritten query - using original');
+        rewrittenEmbResult = originalEmbResult;
+      } else {
+        console.log(`[Parallel Pipeline] ✅ Rewritten embedding ${rewrittenEmbResult.isFromCache ? 'from cache' : 'generated'} (${rewrittenEmbResult.embedding.length}-dim)`);
+        if (rewrittenEmbResult.isFromCache) {
+          console.log(`[Parallel Pipeline] 🚀 Cache source: ${rewrittenEmbResult.cacheSource}${rewrittenEmbResult.similarity ? ` (similarity: ${(rewrittenEmbResult.similarity * 100).toFixed(1)}%)` : ''}`);
+        }
       }
     } else {
       rewrittenEmbResult = originalEmbResult; // Use original if no rewriting

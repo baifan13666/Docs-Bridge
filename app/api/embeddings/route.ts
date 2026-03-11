@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCachedEmbedding } from '@/lib/embeddings/cache';
-import { generateBatchQueryEmbeddings, getModelInfo } from '@/lib/embeddings/query';
+import { getModelInfo } from '@/lib/embeddings/query';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Node.js runtime works fine with WASM backend (no Edge Runtime needed)
@@ -102,8 +102,15 @@ export async function POST(request: NextRequest) {
 
     // Generate embeddings (always query type for RAG search)
     if (text) {
-      // Single text embedding with cache
+      // Single text embedding - check cache only (no generation)
       const cachedResult = await getCachedEmbedding(text);
+
+      if (!cachedResult) {
+        return NextResponse.json({
+          error: 'No cached embedding available. Please generate embedding on client-side first.',
+          recommendation: 'Use useClientEmbedding hook to generate embeddings in the browser'
+        }, { status: 404 });
+      }
 
       return NextResponse.json({
         embedding: cachedResult.embedding,
@@ -114,16 +121,11 @@ export async function POST(request: NextRequest) {
         similarity: cachedResult.similarity
       });
     } else {
-      // Batch embeddings (fallback to direct generation for now)
-      // TODO: Implement batch caching
-      const embeddings = await generateBatchQueryEmbeddings(texts);
-
+      // Batch embeddings not supported server-side
       return NextResponse.json({
-        embeddings,
-        dimension: modelInfo.embeddingDim,
-        modelName: modelInfo.modelName,
-        cached: false
-      });
+        error: 'Batch embedding generation not supported server-side',
+        recommendation: 'Use client-side embedding generation for batch operations'
+      }, { status: 501 }); // 501 Not Implemented
     }
   } catch (error) {
     console.error('[Embeddings API] Error:', error);

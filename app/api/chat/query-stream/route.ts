@@ -190,16 +190,24 @@ export async function POST(request: NextRequest) {
               10   // match_count
             );
           } else {
-            // Fallback: use provided embedding or generate one
+            // Fallback: use provided embedding or check cache
             let queryEmbedding = providedEmbedding;
             if (!queryEmbedding) {
               try {
                 const cachedResult = await getCachedEmbedding(query);
-                queryEmbedding = cachedResult.embedding;
-                console.log(`[RAG Stream] RequestID: ${requestId} - Got embedding from cache (${cachedResult.isFromCache ? 'hit' : 'miss'})`);
+                if (cachedResult) {
+                  queryEmbedding = cachedResult.embedding;
+                  console.log(`[RAG Stream] RequestID: ${requestId} - Got embedding from cache (${cachedResult.isFromCache ? 'hit' : 'miss'})`);
+                } else {
+                  // No cache hit - client must provide embedding
+                  console.error(`[RAG Stream] RequestID: ${requestId} - No cached embedding and none provided`);
+                  sendEvent('error', { error: 'Query embedding required. Please generate embedding on client-side first.' });
+                  controller.close();
+                  return;
+                }
               } catch (embeddingError) {
                 console.error(`[RAG Stream] RequestID: ${requestId} - Failed to get embedding:`, embeddingError);
-                sendEvent('error', { error: 'Failed to generate query embedding' });
+                sendEvent('error', { error: 'Failed to lookup query embedding' });
                 controller.close();
                 return;
               }
