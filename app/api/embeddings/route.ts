@@ -9,11 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import {
-  generateQueryEmbedding,
-  generateBatchQueryEmbeddings,
-  getModelInfo,
-} from '@/lib/embeddings/query';
+import { getCachedEmbedding } from '@/lib/embeddings/cache';
+import { generateBatchQueryEmbeddings, getModelInfo } from '@/lib/embeddings/query';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
@@ -105,22 +102,27 @@ export async function POST(request: NextRequest) {
 
     // Generate embeddings (always query type for RAG search)
     if (text) {
-      // Single text embedding
-      const embedding = await generateQueryEmbedding(text);
+      // Single text embedding with cache
+      const cachedResult = await getCachedEmbedding(text);
 
       return NextResponse.json({
-        embedding,
+        embedding: cachedResult.embedding,
         dimension: modelInfo.embeddingDim,
         modelName: modelInfo.modelName,
+        cached: cachedResult.isFromCache,
+        cacheSource: cachedResult.cacheSource,
+        similarity: cachedResult.similarity
       });
     } else {
-      // Batch embeddings
+      // Batch embeddings (fallback to direct generation for now)
+      // TODO: Implement batch caching
       const embeddings = await generateBatchQueryEmbeddings(texts);
 
       return NextResponse.json({
         embeddings,
         dimension: modelInfo.embeddingDim,
         modelName: modelInfo.modelName,
+        cached: false
       });
     }
   } catch (error) {

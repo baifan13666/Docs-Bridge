@@ -5,7 +5,7 @@
  * 
  * Processes a document for RAG:
  * 1. Chunks the document content
- * 2. Generates dual embeddings (small + large)
+ * 2. Generates embeddings using bge-small-en-v1.5 (384-dim)
  * 3. Saves chunks to database
  * 
  * This endpoint is called:
@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { chunkDocument } from '@/lib/nlp/chunking';
-import { generateBatchDualEmbeddings } from '@/lib/embeddings/server-dual';
+import { generateQueryEmbedding } from '@/lib/embeddings/query';
 
 // Route segment config
 export const runtime = 'nodejs';
@@ -123,26 +123,37 @@ export async function POST(
       });
     }
 
-    // Step 2: Generate DUAL embeddings for all chunks
-    // - embedding_small (384-dim, e5-small): Fast coarse search
-    // - embedding_large (1024-dim, e5-large): Accurate reranking
-    console.log('[Process Document] Step 2: Generating dual embeddings...');
-    console.log('[Process Document] - Small (384-dim, e5-small): for fast coarse search');
-    console.log('[Process Document] - Large (1024-dim, e5-large): for accurate reranking');
+    // Step 2: Generate embeddings for all chunks
+    console.log('[Process Document] Step 2: Generating embeddings...');
+    console.log('[Process Document] Using bge-small-en-v1.5 (384-dim) for consistency');
     
     const chunkTexts = chunks.map(c => c.text);
-    const embeddings = await generateBatchDualEmbeddings(chunkTexts);
+    const embeddings: number[][] = [];
+    
+    // Generate embeddings one by one (to avoid memory issues)
+    for (let i = 0; i < chunkTexts.length; i++) {
+      try {
+        const embedding = await generateQueryEmbedding(chunkTexts[i]);
+        embeddings.push(embedding);
+        
+        if ((i + 1) % 10 === 0) {
+          console.log(`[Process Document] Generated ${i + 1}/${chunkTexts.length} embeddings`);
+        }
+      } catch (error) {
+        console.error(`[Process Document] Failed to generate embedding for chunk ${i}:`, error);
+        throw error;
+      }
+    }
 
-    console.log(`[Process Document] Generated ${embeddings.length} dual embeddings`);
+    console.log(`[Process Document] Generated ${embeddings.length} embeddings`);
 
-    // Step 3: Save chunks to database with BOTH embeddings
-    console.log('[Process Document] Step 3: Saving chunks with dual embeddings...');
+    // Step 3: Save chunks to database with embeddings
+    console.log('[Process Document] Step 3: Saving chunks with embeddings...');
     const chunksToInsert = chunks.map((chunk, index) => ({
       document_id: documentId,
       chunk_text: chunk.text,
       chunk_index: chunk.index,
-      embedding_small: embeddings[index].small,  // 384-dim for coarse search
-      embedding_large: embeddings[index].large,  // 1024-dim for reranking
+      embedding: embeddings[index],  // 384-dim bge-small-en-v1.5
       token_count: chunk.tokenCount,
       language: document.language || null
     }));

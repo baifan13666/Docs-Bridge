@@ -176,6 +176,23 @@ export interface RAGQueryResponse {
   metadata: {
     chunks_found: number;
     has_context: boolean;
+    language_detected?: string;
+    dialect_detected?: string;
+    query_rewritten?: boolean;
+    keywords_added?: number;
+    cache_performance?: {
+      original_cache_hit: boolean;
+      rewritten_cache_hit: boolean;
+      cache_source?: string;
+    };
+    performance?: {
+      total_time: number;
+      preprocessing_time: number;
+      language_detection: number;
+      query_rewrite: number;
+      embedding_generation: number;
+      structured_memory: number;
+    };
   };
 }
 

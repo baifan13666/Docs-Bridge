@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Models } from '@/lib/langchain/openrouter';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
+import { executeParallelPipeline, executeDualEmbeddingSearch } from '@/lib/rag/parallel-pipeline';
 
 // Route segment config
 export const runtime = 'nodejs';
@@ -34,6 +35,7 @@ interface SearchResult {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
   try {
     const supabase = await createClient();
 
@@ -64,24 +66,46 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[RAG Query] ========================================');
-    console.log('[RAG Query] Starting RAG pipeline...');
+    console.log('[RAG Query] Starting PARALLEL RAG pipeline...');
     console.log(`[RAG Query] Query: ${query.substring(0, 100)}...`);
     console.log(`[RAG Query] Conversation: ${conversation_id}`);
-    console.log(`[RAG Query] Query embedding dimension: ${query_embedding.length}`);
     console.log(`[RAG Query] Model mode: ${model_mode} (${model_mode === 'mini' ? 'Trinity Mini' : 'Trinity Large'})`);
 
-    // Step 1: Save user message
-    console.log('[RAG Query] Step 1: Saving user message...');
-    const { data: userMessage, error: userMsgError } = await supabase
-      .from('chat_messages')
-      .insert({
-        conversation_id,
-        role: 'user',
-        content: query
-      })
-      .select()
-      .single();
+    // PARALLEL PIPELINE: Execute preprocessing in parallel
+    console.log('[RAG Query] Step 1-3: Parallel preprocessing (language + rewrite + embedding + memory)...');
+    const pipelineResult = await executeParallelPipeline(query, user.id, conversation_id);
+    
+    console.log(`[RAG Query] ✅ Parallel preprocessing completed in ${pipelineResult.timings.total}ms`);
+    console.log(`[RAG Query] Language: ${pipelineResult.language}${pipelineResult.dialect ? ` (${pipelineResult.dialect})` : ''}`);
+    console.log(`[RAG Query] Query rewritten: ${pipelineResult.originalQuery !== pipelineResult.rewrittenQuery ? 'Yes' : 'No'}`);
+    console.log(`[RAG Query] Keywords added: ${pipelineResult.addedKeywords.length}`);
 
+    // Step 4: Save user message (can be done in parallel with search)
+    const [userMessageResult, searchResults] = await Promise.all([
+      // Save user message
+      supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id,
+          role: 'user',
+          content: query
+        })
+        .select()
+        .single(),
+      
+      // Dual embedding search (uses both original and rewritten embeddings)
+      executeDualEmbeddingSearch(
+        supabase,
+        user.id,
+        pipelineResult.originalEmbedding,
+        pipelineResult.rewrittenEmbedding,
+        active_folders,
+        0.7, // match_threshold
+        10   // match_count
+      )
+    ]);
+
+    const { data: userMessage, error: userMsgError } = userMessageResult;
     if (userMsgError || !userMessage) {
       console.error('[RAG Query] Error saving user message:', userMsgError);
       return NextResponse.json(
@@ -90,29 +114,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Semantic search with bge-small (384-dim)
-    console.log('[RAG Query] Step 2: Performing semantic search with bge-small...');
-    const searchStartTime = Date.now();
-
-    // Search with 384-dim bge-small embedding
-    const { data: searchResults, error: searchError } = await supabase
-      .rpc('search_chunks_small', {
-        query_embedding,
-        match_threshold: 0.7,
-        match_count: 10,
-        user_id_param: user.id,
-        active_folder_ids: active_folders
-      });
-
-    if (searchError) {
-      console.error('[RAG Query] ❌ Search error:', searchError);
-    }
-
     let retrievedChunks: SearchResult[] = [];
 
     if (searchResults && searchResults.length > 0) {
-      const searchTime = Date.now() - searchStartTime;
-      console.log(`[RAG Query] ✅ Search found ${searchResults.length} chunks in ${searchTime}ms`);
+      console.log(`[RAG Query] ✅ Dual search found ${searchResults.length} unique chunks`);
       
       retrievedChunks = searchResults.map((result: any) => ({
         chunk_id: result.id,
@@ -126,25 +131,15 @@ export async function POST(request: NextRequest) {
       }));
       
       // Log top results
-      retrievedChunks.forEach((chunk, idx) => {
+      retrievedChunks.slice(0, 3).forEach((chunk, idx) => {
         console.log(`[RAG Query]   ${idx + 1}. ${chunk.title} (similarity: ${(chunk.similarity * 100).toFixed(1)}%)`);
       });
     } else {
       console.log('[RAG Query] ⚠️ No relevant chunks found');
     }
 
-    // Step 3: Build RAG context with structured memory
-    console.log('[RAG Query] Step 3: Building RAG context with structured memory...');
-    
-    // Build structured memory
-    let structuredMemory;
-    try {
-      structuredMemory = await buildStructuredMemory(user.id, conversation_id, 4000);
-      console.log(`[RAG Query] ✅ Structured memory built: ${structuredMemory.recent_messages.length} messages, ${structuredMemory.context_window.total_tokens} tokens`);
-    } catch (memoryError) {
-      console.error('[RAG Query] ⚠️ Error building structured memory:', memoryError);
-      structuredMemory = null;
-    }
+    // Step 5: Build RAG context (structured memory already available from parallel pipeline)
+    console.log('[RAG Query] Step 5: Building RAG context...');
     
     let context = '';
     if (retrievedChunks.length > 0) {
@@ -158,8 +153,8 @@ export async function POST(request: NextRequest) {
       console.log('[RAG Query] ⚠️ No context available - will use fallback prompt');
     }
 
-    // Step 4: Call LLM with RAG context (using LangChain)
-    console.log('[RAG Query] Step 4: Calling LLM with RAG context...');
+    // Step 6: Call LLM with RAG context (using LangChain)
+    console.log('[RAG Query] Step 6: Calling LLM with RAG context...');
     console.log(`[RAG Query] Model mode: ${model_mode}`);
     const llmStartTime = Date.now();
 
@@ -174,15 +169,21 @@ export async function POST(request: NextRequest) {
           maxTokens: 2048,
         });
 
-    // Build system prompt with structured memory
-    const memoryContext = structuredMemory 
-      ? `\n\n${formatStructuredMemoryForPrompt(structuredMemory)}\n`
+    // Build system prompt with structured memory (already available from parallel pipeline)
+    const memoryContext = pipelineResult.structuredMemory 
+      ? `\n\n${formatStructuredMemoryForPrompt(pipelineResult.structuredMemory)}\n`
       : '';
     
     const systemPrompt = retrievedChunks.length > 0
       ? `You are a helpful government policy assistant. Answer questions based ONLY on the provided documents. 
 If the answer is not in the documents, say "I don't have enough information to answer that question."
 Always cite which document you're referencing (e.g., "According to Document 1...").
+
+Query Analysis:
+- Original: "${pipelineResult.originalQuery}"
+- Language: ${pipelineResult.language}${pipelineResult.dialect ? ` (${pipelineResult.dialect})` : ''}
+- Rewritten: "${pipelineResult.rewrittenQuery}"
+- Keywords added: ${pipelineResult.addedKeywords.join(', ')}
 ${memoryContext}
 Context Documents:
 ${context}`
@@ -192,6 +193,11 @@ Politely inform them that you don't have information about their specific questi
 1. Try rephrasing their question
 2. Check if relevant documents have been added to the knowledge base
 3. Contact support for more specific information
+
+Query Analysis:
+- Original: "${pipelineResult.originalQuery}"
+- Language: ${pipelineResult.language}${pipelineResult.dialect ? ` (${pipelineResult.dialect})` : ''}
+- Rewritten: "${pipelineResult.rewrittenQuery}"
 ${memoryContext}`;
 
     // Call LLM
@@ -225,13 +231,13 @@ ${memoryContext}`;
     }
 
     // Step 4.5: Calculate confidence score
-    console.log('[RAG Query] Step 4.5: Calculating confidence score...');
+    console.log('[RAG Query] Step 6.5: Calculating confidence score...');
     const confidenceScore = calculateConfidenceScore(retrievedChunks, assistantResponse, query);
     console.log(`[RAG Query] ✅ Confidence: ${(confidenceScore.overall * 100).toFixed(0)}% (${confidenceScore.level})`);
     console.log(`[RAG Query] Explanation: ${confidenceScore.explanation}`);
 
     // Step 5: Save assistant message
-    console.log('[RAG Query] Step 5: Saving assistant message...');
+    console.log('[RAG Query] Step 7: Saving assistant message...');
     const { data: assistantMessage, error: assistantMsgError } = await supabase
       .from('chat_messages')
       .insert({
@@ -266,7 +272,7 @@ ${memoryContext}`;
     }
 
     // Step 7: Track usage (increment message count and token usage)
-    console.log('[RAG Query] Step 7: Tracking usage...');
+    console.log('[RAG Query] Step 8: Tracking usage...');
     try {
       const { data: usageResult, error: usageError } = await supabase
         .rpc('increment_message_usage', {
@@ -284,7 +290,9 @@ ${memoryContext}`;
       // Don't fail the request if usage tracking fails
     }
 
-    console.log('[RAG Query] ✅ RAG pipeline completed successfully');
+    console.log('[RAG Query] ✅ PARALLEL RAG pipeline completed successfully');
+    console.log(`[RAG Query] 📊 Total pipeline time: ${Date.now() - startTime}ms`);
+    console.log(`[RAG Query] 🚀 Preprocessing speedup: ${pipelineResult.timings.total}ms (parallel) vs estimated ${pipelineResult.timings.languageDetection + pipelineResult.timings.queryRewrite + pipelineResult.timings.originalEmbedding + pipelineResult.timings.structuredMemory}ms (sequential)`);
     console.log('[RAG Query] ========================================');
 
     return NextResponse.json({
@@ -302,7 +310,26 @@ ${memoryContext}`;
       confidence_score: confidenceScore,
       metadata: {
         chunks_found: retrievedChunks.length,
-        has_context: retrievedChunks.length > 0
+        has_context: retrievedChunks.length > 0,
+        // Parallel pipeline metadata
+        language_detected: pipelineResult.language,
+        dialect_detected: pipelineResult.dialect,
+        query_rewritten: pipelineResult.originalQuery !== pipelineResult.rewrittenQuery,
+        keywords_added: pipelineResult.addedKeywords.length,
+        // Cache performance
+        cache_performance: {
+          original_cache_hit: pipelineResult.originalCacheHit,
+          rewritten_cache_hit: pipelineResult.rewrittenCacheHit,
+          cache_source: pipelineResult.cacheSource
+        },
+        performance: {
+          total_time: Date.now() - startTime,
+          preprocessing_time: pipelineResult.timings.total,
+          language_detection: pipelineResult.timings.languageDetection,
+          query_rewrite: pipelineResult.timings.queryRewrite,
+          embedding_generation: pipelineResult.timings.originalEmbedding + pipelineResult.timings.rewrittenEmbedding,
+          structured_memory: pipelineResult.timings.structuredMemory
+        }
       }
     });
 
