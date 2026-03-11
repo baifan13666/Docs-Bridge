@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Exclude node-specific modules from webpack bundle for @xenova/transformers
+  // Configure webpack for @xenova/transformers deployment (Context7 recommended)
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -26,16 +26,23 @@ const nextConfig: NextConfig = {
       "onnxruntime-node$": false,
     };
     
-    // Ignore sharp module completely to prevent loading issues
+    // Don't externalize sharp on server to prevent loading issues
     if (isServer) {
-      config.externals = [...(config.externals || []), 'sharp'];
+      config.externals = config.externals || [];
+      // Remove sharp from externals if it exists
+      config.externals = config.externals.filter((external: any) => {
+        if (typeof external === 'string') {
+          return external !== 'sharp';
+        }
+        return true;
+      });
     }
     
     return config;
   },
   // Indicate that these packages should not be bundled by webpack for server components
-  // Moved from experimental.serverComponentsExternalPackages (deprecated in Next.js 16)
-  serverExternalPackages: ['sharp', 'onnxruntime-node', '@xenova/transformers'],
+  // Based on Context7 Transformers.js documentation
+  serverExternalPackages: ['onnxruntime-node', '@xenova/transformers'],
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');

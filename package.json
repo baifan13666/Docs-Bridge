@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test:langchain": "tsx lib/langchain/test.ts",
-    "langchain:setup": "pnpm add @langchain/openai @langchain/core zod && pnpm test:langchain"
+    "langchain:setup": "pnpm add @langchain/openai @langchain/core zod && pnpm test:langchain",
+    "postinstall": "node -e \"try { require('sharp'); console.log('Sharp loaded successfully'); } catch (e) { console.log('Sharp optional dependency not available, continuing without it...'); }\""
   },
   "dependencies": {
     "@browser-ai/transformers-js": "^2.1.6",
