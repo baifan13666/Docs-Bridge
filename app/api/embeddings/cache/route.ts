@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCacheStats, warmupQueryTemplates } from '@/lib/embeddings/cache';
 
-export const runtime = 'nodejs';
+// Node.js runtime works fine with WASM backend (no Edge Runtime needed)
 export const dynamic = 'force-dynamic';
 
 /**

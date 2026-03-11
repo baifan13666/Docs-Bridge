@@ -3,50 +3,53 @@
  * 
  * Uses bge-small-en-v1.5 (384-dim) to match the Crawler Service's embedding_small
  * This ensures query embeddings are compatible with document embeddings in the database
+ * 
+ * IMPORTANT: This module ONLY uses @huggingface/transformers locally.
+ * No external API calls are made for embedding generation.
  */
 
-const MODEL = 'Xenova/bge-small-en-v1.5'; // 384-dim
+const MODEL = 'Xenova/bge-small-en-v1.5'; // 384-dim (still using Xenova namespace for model)
 const EMBEDDING_DIM = 384;
 
 let pipeline_instance: any = null;
 let isInitializing = false;
-let transformersAvailable = false;
+let transformersAvailable: boolean | null = null;
 
-// Check if transformers is available without importing it
+// Dynamically import and configure transformers
+async function getTransformersModule() {
+  const { pipeline, env } = await import('@huggingface/transformers');
+  
+  // CRITICAL: Force WASM backend FIRST to prevent native library search
+  // This prevents the "libonnxruntime.so.1: cannot open shared object file" error
+  // By prioritizing 'wasm' over 'cpu', we use onnxruntime-web instead of onnxruntime-node
+  if (env.backends?.onnx?.wasm) {
+    env.backends.onnx.wasm.proxy = false;
+    env.backends.onnx.wasm.numThreads = 1;
+    env.backends.onnx.wasm.simd = true;
+  }
+  
+  // Configure environment for WASM backend (no native dependencies needed)
+  env.allowLocalModels = false;
+  env.allowRemoteModels = true;
+  env.useBrowserCache = false;
+  env.cacheDir = '/tmp/.transformers-cache';
+  
+  return { pipeline, env };
+}
+
+// Check if transformers is available
 async function checkTransformersAvailability() {
+  // Return cached result if already checked
+  if (transformersAvailable !== null) {
+    return transformersAvailable ? await getTransformersModule() : null;
+  }
+  
   try {
-    // Only import transformers if we're not in a build environment
-    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
-      // In production, try to dynamically import
-      const { pipeline, env } = await import('@xenova/transformers');
-      
-      // Configure environment
-      env.backends.onnx.wasm.numThreads = 1;
-      env.backends.onnx.wasm.simd = true;
-      env.allowLocalModels = false;
-      env.allowRemoteModels = true;
-      env.useBrowserCache = false;
-      env.cacheDir = '/tmp/.transformers-cache';
-      
-      transformersAvailable = true;
-      return { pipeline, env };
-    } else {
-      // In development, import normally
-      const { pipeline, env } = await import('@xenova/transformers');
-      
-      // Configure environment
-      env.backends.onnx.wasm.numThreads = 1;
-      env.backends.onnx.wasm.simd = true;
-      env.allowLocalModels = false;
-      env.allowRemoteModels = true;
-      env.useBrowserCache = false;
-      env.cacheDir = '/tmp/.transformers-cache';
-      
-      transformersAvailable = true;
-      return { pipeline, env };
-    }
+    const transformers = await getTransformersModule();
+    transformersAvailable = true;
+    return transformers;
   } catch (error) {
-    console.warn('[Query Embeddings] Transformers not available:', error instanceof Error ? error.message : String(error));
+    console.error('[Query Embeddings] Transformers not available:', error instanceof Error ? error.message : String(error));
     transformersAvailable = false;
     return null;
   }
@@ -55,28 +58,38 @@ async function checkTransformersAvailability() {
 /**
  * Generate 384-dim query embedding
  * Compatible with Crawler Service's embedding_small
+ * 
+ * This function ONLY uses local transformers - no external API calls
  */
 export async function generateQueryEmbedding(query: string): Promise<number[]> {
   try {
-    // Try to use local transformers
+    // Check if transformers is available
     const transformers = await checkTransformersAvailability();
     if (!transformers) {
-      throw new Error('Transformers library not available - this may be due to missing native dependencies like sharp');
+      throw new Error('Transformers library not available. This is required for embedding generation. Please ensure @xenova/transformers is properly installed.');
     }
     
-    // Initialize model if needed
+    // Initialize model if needed (with proper locking)
     if (!pipeline_instance) {
+      // Wait if another initialization is in progress
       while (isInitializing) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
+      // Double-check after waiting
       if (!pipeline_instance) {
         try {
           isInitializing = true;
           console.log('[Query Embeddings] Initializing bge-small-en-v1.5 (384-dim) with WASM backend...');
           
+          // CRITICAL: Set backend priority to force WASM usage
+          // This must be done BEFORE pipeline initialization
+          if (transformers.env.backends?.onnx?.wasm) {
+            transformers.env.backends.onnx.wasm.proxy = false;
+          }
+          
           pipeline_instance = await transformers.pipeline('feature-extraction', MODEL, {
-            quantized: true,
+            dtype: 'q8', // Quantized 8-bit (default for WASM)
           });
           
           console.log('[Query Embeddings] ✅ bge-small-en-v1.5 model ready (WASM)');

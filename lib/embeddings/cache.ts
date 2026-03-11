@@ -11,7 +11,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { generateQueryEmbedding } from './query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import crypto from 'crypto';
 
 export interface CachedEmbedding {
   embedding: number[];
@@ -46,11 +45,16 @@ function normalizeQuery(query: string): string {
 }
 
 /**
- * Generate hash for query caching
+ * Generate hash for query caching using Web Crypto API
+ * Compatible with both Node.js and Edge Runtime
  */
-function generateQueryHash(query: string): string {
+async function generateQueryHash(query: string): Promise<string> {
   const normalized = normalizeQuery(query);
-  return crypto.createHash('sha256').update(normalized).digest('hex');
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -87,7 +91,7 @@ export async function getCachedEmbedding(
   dialect?: string
 ): Promise<CachedEmbedding> {
   const supabase = await createClient();
-  const queryHash = generateQueryHash(query);
+  const queryHash = await generateQueryHash(query);
   const normalizedQuery = normalizeQuery(query);
   
   console.log(`[Embedding Cache] Processing query: "${query}"`);
@@ -242,7 +246,7 @@ async function cacheEmbedding(
   queryHash?: string
 ): Promise<void> {
   const supabase = await createClient();
-  const hash = queryHash || generateQueryHash(query);
+  const hash = queryHash || await generateQueryHash(query);
   const normalized = normalizeQuery(query);
 
   try {

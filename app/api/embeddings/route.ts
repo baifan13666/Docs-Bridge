@@ -13,7 +13,7 @@ import { getCachedEmbedding } from '@/lib/embeddings/cache';
 import { generateBatchQueryEmbeddings, getModelInfo } from '@/lib/embeddings/query';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 
-export const runtime = 'nodejs';
+// Node.js runtime works fine with WASM backend (no Edge Runtime needed)
 export const dynamic = 'force-dynamic';
 
 /**

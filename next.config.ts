@@ -18,31 +18,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Configure webpack for @xenova/transformers deployment (Context7 recommended)
-  webpack: (config, { isServer }) => {
+  // Configure webpack for @huggingface/transformers
+  // Based on official Transformers.js documentation
+  webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       "sharp$": false,
       "onnxruntime-node$": false,
     };
-    
-    // Don't externalize sharp on server to prevent loading issues
-    if (isServer) {
-      config.externals = config.externals || [];
-      // Remove sharp from externals if it exists
-      config.externals = config.externals.filter((external: any) => {
-        if (typeof external === 'string') {
-          return external !== 'sharp';
-        }
-        return true;
-      });
-    }
-    
     return config;
   },
-  // Indicate that these packages should not be bundled by webpack for server components
-  // Based on Context7 Transformers.js documentation
-  serverExternalPackages: ['onnxruntime-node', '@xenova/transformers'],
+  // Prevent webpack from bundling server-side packages
+  // Based on official Transformers.js documentation
+  serverExternalPackages: ['sharp', 'onnxruntime-node'],
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
