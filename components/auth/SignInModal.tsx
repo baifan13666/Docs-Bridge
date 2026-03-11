@@ -215,8 +215,8 @@ export default function SignInModal({ onClose }: SignInModalProps) {
                   placeholder={t('auth.codePlaceholder')}
                   required
                   type="text"
-                  maxLength={6}
-                  pattern="[0-9]{6}"
+                  maxLength={8}
+                  pattern="[0-9]{8}"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   disabled={loading}
@@ -228,7 +228,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
               </div>
               <button
                 type="submit"
-                disabled={loading || otp.length !== 6}
+                disabled={loading || otp.length !== 8}
                 className="w-full bg-[#1E3A8A] text-white font-medium py-2.5 px-4 rounded-lg hover:bg-blue-800 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] disabled:opacity-50 cursor-pointer"
               >
                 {loading ? t('auth.verifying') : t('auth.verifyCode')}
