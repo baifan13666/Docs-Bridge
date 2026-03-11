@@ -189,7 +189,7 @@ export async function executeParallelPipeline(
       rewrittenEmbResult = await getCachedEmbedding(
         queryRewriteResult.rewritten,
         language.language,
-        language.dialect
+        language.dialect ?? undefined
       );
       console.log(`[Parallel Pipeline] ✅ Rewritten embedding ${rewrittenEmbResult.isFromCache ? 'from cache' : 'generated'} (${rewrittenEmbResult.embedding.length}-dim)`);
       if (rewrittenEmbResult.isFromCache) {

@@ -211,8 +211,11 @@ ${memoryContext}`;
       
       // Extract token usage from response
       if (result.usage) {
-        tokensUsed = result.usage.promptTokens + result.usage.completionTokens;
-        console.log(`[RAG Query] 📊 Token usage: ${tokensUsed} (prompt: ${result.usage.promptTokens}, completion: ${result.usage.completionTokens})`);
+        // AI SDK v6 uses 'promptTokens' and 'completionTokens'
+        const promptTokens = (result.usage as any).promptTokens || 0;
+        const completionTokens = (result.usage as any).completionTokens || 0;
+        tokensUsed = promptTokens + completionTokens;
+        console.log(`[RAG Query] 📊 Token usage: ${tokensUsed} (prompt: ${promptTokens}, completion: ${completionTokens})`);
       }
       
       const llmTime = Date.now() - llmStartTime;
