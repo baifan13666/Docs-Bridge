@@ -149,3 +149,79 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+/* Slide in from right animation for sidebar */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+/* Markdown content styles */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+  color: var(--color-accent-hover);
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content code {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.markdown-content pre code {
+  display: block;
+  overflow-x: auto;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Ensure proper spacing in lists */
+.markdown-content ul ul,
+.markdown-content ol ul,
+.markdown-content ul ol,
+.markdown-content ol ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Table responsiveness */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Smooth scroll for anchor links */
+.markdown-content [id] {
+  scroll-margin-top: 2rem;
+}

@@ -46,8 +46,9 @@ export const SimplificationResultSchema = z.object({
  * Summarization Schema
  */
 export const SummarizationResultSchema = z.object({
-  bullet_points: z.array(z.string()),
-  key_actions: z.array(z.string()),
+  bullet_points: z.array(z.string()).default([]),
+  key_actions: z.array(z.string()).default([]),
+  tldr: z.string().optional(),
   confidence: confidenceSchema,
 });
 

@@ -6,9 +6,10 @@ interface TooltipProps {
   content: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
-export default function Tooltip({ content, children, className = '' }: TooltipProps) {
+export default function Tooltip({ content, children, className = '', onClick }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState<'top' | 'bottom'>('top');
   const triggerRef = useRef<HTMLSpanElement>(null);
@@ -30,13 +31,20 @@ export default function Tooltip({ content, children, className = '' }: TooltipPr
     }
   }, [isVisible]);
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <span className="relative inline-block">
       <span
         ref={triggerRef}
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
-        onClick={() => setIsVisible(!isVisible)}
+        onClick={handleClick}
         className={className}
       >
         {children}

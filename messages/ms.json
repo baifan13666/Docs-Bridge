@@ -7,7 +7,15 @@
     "back": "Kembali",
     "submit": "Hantar",
     "cancel": "Batal",
-    "close": "Tutup"
+    "close": "Tutup",
+    "save": "Simpan Perubahan",
+    "saving": "Menyimpan...",
+    "delete": "Padam",
+    "edit": "Edit",
+    "create": "Cipta",
+    "active": "Aktif",
+    "guest": "Tetamu",
+    "notSignedIn": "Belum Log Masuk"
   },
   "home": {
     "title": "DocsBridge",
@@ -71,10 +79,10 @@
     "emailPlaceholder": "emel@anda.com",
     "sendLoginCode": "Hantar Kod Log Masuk",
     "sending": "Menghantar...",
-    "checkEmail": "Semak emel anda untuk kod 6 digit!",
+    "checkEmail": "Semak emel anda untuk kod 8 digit!",
     "successfullySignedIn": "Berjaya log masuk!",
-    "enterCode": "Masukkan Kod 6 Digit",
-    "codePlaceholder": "000000",
+    "enterCode": "Masukkan Kod 8 Digit",
+    "codePlaceholder": "00000000",
     "sentTo": "Dihantar ke {email}",
     "verifyCode": "Sahkan Kod",
     "verifying": "Mengesahkan...",
@@ -92,6 +100,12 @@
     "aiDisclaimer": "AI boleh membuat kesilapan. Sila sahkan maklumat penting dengan sumber rasmi.",
     "newChat": "Sembang Baharu",
     "attachFile": "Lampirkan fail",
+    "attachments": "Lampiran",
+    "removeAttachment": "Buang",
+    "uploadingFile": "Memuat naik...",
+    "fileAttached": "Fail dilampirkan",
+    "maxFileSize": "Saiz maks: 10MB",
+    "supportedFormats": "Disokong: PDF, DOC, DOCX, TXT, PNG, JPG",
     "useVoice": "Gunakan input suara",
     "stopRecording": "Hentikan rakaman",
     "listening": "Mendengar...",
@@ -304,15 +318,5 @@
     "createFolderFirst": "Cipta folder dahulu untuk mengatur dokumen anda",
     "retry": "Cuba Lagi",
     "createYourFirstDocument": "Cipta dokumen pertama anda"
-  },
-  "common": {
-    "save": "Simpan Perubahan",
-    "saving": "Menyimpan...",
-    "delete": "Padam",
-    "edit": "Edit",
-    "create": "Cipta",
-    "active": "Aktif",
-    "guest": "Tetamu",
-    "notSignedIn": "Belum Log Masuk"
   }
 }

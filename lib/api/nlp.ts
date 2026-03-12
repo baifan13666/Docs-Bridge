@@ -42,11 +42,15 @@ export interface SimplificationResult {
     word: string;
     explanation: string;
     simpler_alternative: string;
+    context_snippet?: string;
   }>;
+  confidence: number;
   readability_score: {
     original: number;
     simplified: number;
-    metric: 'flesch_reading_ease' | 'fkgl';
+    flesch_reading_ease?: number;
+    flesch_kincaid_grade?: number;
+    improvement?: number;
   };
 }
 
@@ -54,6 +58,8 @@ export async function simplifyText(
   text: string,
   targetLevel: 'grade_5' | 'grade_8' | 'grade_10' = 'grade_5'
 ): Promise<SimplificationResult> {
+  console.log('[nlpApi.simplifyText] Calling API with text length:', text.length);
+  
   const response = await fetch('/api/nlp/simplify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -61,12 +67,18 @@ export async function simplifyText(
   });
 
   const data = await response.json();
+  console.log('[nlpApi.simplifyText] API response:', data);
 
   if (!response.ok) {
+    console.error('[nlpApi.simplifyText] API error:', data.error);
     throw new Error(data.error || 'Failed to simplify text');
   }
 
-  return data;
+  // API returns { success: true, result: {...} }
+  const result = data.result || data;
+  console.log('[nlpApi.simplifyText] Extracted result:', result);
+  
+  return result;
 }
 
 // ============================================
@@ -74,14 +86,15 @@ export async function simplifyText(
 // ============================================
 
 export interface SummarizationResult {
-  summary: string;
   bullet_points: string[];
   key_actions: string[];
+  tldr?: string; // Short paragraph summary (only for 'tldr' format)
   word_count: {
     original: number;
     summary: number;
     reduction: number; // percentage
   };
+  confidence: number;
 }
 
 export async function summarizeText(
@@ -89,6 +102,8 @@ export async function summarizeText(
   format: 'bullet_points' | 'key_actions' | 'tldr' = 'bullet_points',
   maxPoints: number = 5
 ): Promise<SummarizationResult> {
+  console.log('[nlpApi.summarizeText] Calling API with text length:', text.length);
+  
   const response = await fetch('/api/nlp/summarize', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -96,12 +111,18 @@ export async function summarizeText(
   });
 
   const data = await response.json();
+  console.log('[nlpApi.summarizeText] API response:', data);
 
   if (!response.ok) {
+    console.error('[nlpApi.summarizeText] API error:', data.error);
     throw new Error(data.error || 'Failed to summarize text');
   }
 
-  return data;
+  // API returns { success: true, result: {...} }
+  const result = data.result || data;
+  console.log('[nlpApi.summarizeText] Extracted result:', result);
+  
+  return result;
 }
 
 // ============================================
@@ -182,4 +203,39 @@ export async function translateToDialect(
   }
 
   return data.result;
+}
+
+// ============================================
+// WORD EXPLANATION
+// ============================================
+
+export interface WordExplanation {
+  word: string;
+  explanation: string;
+}
+
+export async function explainWord(
+  word: string,
+  context?: string
+): Promise<WordExplanation> {
+  console.log('[nlpApi.explainWord] Calling API for word:', word);
+  
+  const response = await fetch('/api/nlp/explain-word', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ word, context })
+  });
+
+  const data = await response.json();
+  console.log('[nlpApi.explainWord] API response:', data);
+
+  if (!response.ok) {
+    console.error('[nlpApi.explainWord] API error:', data.error);
+    throw new Error(data.error || 'Failed to explain word');
+  }
+
+  return {
+    word: data.word,
+    explanation: data.explanation
+  };
 }

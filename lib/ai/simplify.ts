@@ -7,6 +7,8 @@ import { createModelWithHealing, ModelPresets } from './openrouter';
 import { SimplificationResultSchema, type DifficultWord } from './schemas';
 
 export interface ReadabilityScore {
+  original: number;
+  simplified: number;
   flesch_reading_ease: number;
   flesch_kincaid_grade: number;
   improvement: number;
@@ -26,9 +28,15 @@ function calculateReadabilityScores(original: string, simplified: string): Reada
   const simplifiedWords = simplified.split(/\s+/).length;
   const improvement = Math.min(((originalWords - simplifiedWords) / originalWords) * 100, 50);
   
+  // Calculate grade levels (simplified formula)
+  const originalGrade = Math.max(5, 12 - (improvement / 10));
+  const simplifiedGrade = Math.max(3, originalGrade - (improvement / 10));
+  
   return {
+    original: originalGrade,
+    simplified: simplifiedGrade,
     flesch_reading_ease: 60 + improvement,
-    flesch_kincaid_grade: 8 - (improvement / 10),
+    flesch_kincaid_grade: simplifiedGrade,
     improvement: Math.round(improvement),
   };
 }

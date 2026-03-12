@@ -209,7 +209,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
                   {t('auth.enterCode')}
                 </label>
                 <input
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] outline-none transition-shadow placeholder-gray-400 text-center text-2xl tracking-widest font-mono"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] outline-none transition-shadow placeholder-gray-400 text-center text-lg tracking-wider font-mono"
                   id="otp"
                   name="otp"
                   placeholder={t('auth.codePlaceholder')}

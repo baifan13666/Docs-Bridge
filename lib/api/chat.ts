@@ -201,7 +201,8 @@ export async function ragQuery(
   query: string,
   queryEmbedding: number[],
   activeFolders?: string[] | null,
-  modelMode?: 'standard' | 'mini'
+  modelMode?: 'standard' | 'mini',
+  originalQuery?: string  // Original user input (for display), if different from optimized query
 ): Promise<RAGQueryResponse> {
   const response = await fetch('/api/chat/query', {
     method: 'POST',
@@ -212,6 +213,7 @@ export async function ragQuery(
       query_embedding: queryEmbedding,
       active_folders: activeFolders,
       model_mode: modelMode || 'standard',
+      original_query: originalQuery,  // Pass original query for user message
     })
   });
 

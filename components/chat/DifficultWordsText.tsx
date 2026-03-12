@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Tooltip from '../ui/Tooltip';
 import type { SimplificationResult } from '@/lib/api/nlp';
 
@@ -7,12 +8,14 @@ interface DifficultWordsTextProps {
   text: string;
   difficultWords: SimplificationResult['difficult_words'];
   className?: string;
+  onWordClick?: (word: string, context: string) => void;
 }
 
 export default function DifficultWordsText({ 
   text, 
   difficultWords, 
-  className = '' 
+  className = '',
+  onWordClick
 }: DifficultWordsTextProps) {
   if (!difficultWords || difficultWords.length === 0) {
     return <span className={className}>{text}</span>;
@@ -47,7 +50,7 @@ export default function DifficultWordsText({
     const difficultWord = wordMap.get(wordLower);
 
     if (difficultWord) {
-      // This is a difficult word - add tooltip
+      // This is a difficult word - add tooltip and click handler
       parts.push(
         <Tooltip
           key={`word-${wordStart}`}
@@ -64,9 +67,13 @@ export default function DifficultWordsText({
                   Simpler: "{difficultWord.simpler_alternative}"
                 </div>
               )}
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-2 pt-2 border-t border-gray-600">
+                Click for detailed explanation
+              </div>
             </div>
           }
-          className="underline decoration-dashed decoration-1 underline-offset-2 cursor-help text-(--color-accent) hover:text-(--color-accent-hover) transition-colors"
+          className="underline decoration-dashed decoration-1 underline-offset-2 cursor-pointer text-(--color-accent) hover:text-(--color-accent-hover) transition-colors"
+          onClick={() => onWordClick?.(word, text)}
         >
           {word}
         </Tooltip>

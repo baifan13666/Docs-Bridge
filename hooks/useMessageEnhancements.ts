@@ -25,8 +25,15 @@ export function useMessageEnhancements() {
   }>({});
 
   async function simplifyMessage(messageId: string, content: string) {
+    console.log('[useMessageEnhancements] ========== SIMPLIFICATION START ==========');
+    console.log('[useMessageEnhancements] Message ID:', messageId);
+    console.log('[useMessageEnhancements] Content length:', content.length);
+    console.log('[useMessageEnhancements] Content preview:', content.substring(0, 100));
+    
     if (enhancements[messageId]?.simplified) {
-      setMessageView(prev => ({ ...prev, [messageId]: 'simplified' }));
+      console.log('[useMessageEnhancements] ✅ Simplification already exists, switching view');
+      console.log('[useMessageEnhancements] Difficult words count:', enhancements[messageId].simplified!.difficult_words.length);
+      setMessageView(prev => ({ ...prev, [messageId]: 'simplified' as MessageView }));
       return;
     }
 
@@ -36,7 +43,21 @@ export function useMessageEnhancements() {
     }));
     
     try {
+      console.log('[useMessageEnhancements] 📡 Calling simplifyText API...');
       const result = await nlpApi.simplifyText(content, 'grade_5');
+      console.log('[useMessageEnhancements] ✅ API Response received');
+      console.log('[useMessageEnhancements] Simplified text length:', result.simplified?.length || 0);
+      console.log('[useMessageEnhancements] Difficult words count:', result.difficult_words?.length || 0);
+      console.log('[useMessageEnhancements] Difficult words:', result.difficult_words);
+      console.log('[useMessageEnhancements] Readability score:', result.readability_score);
+      console.log('[useMessageEnhancements] Confidence:', result.confidence);
+      
+      if (!result.difficult_words || result.difficult_words.length === 0) {
+        console.warn('[useMessageEnhancements] ⚠️ WARNING: No difficult words identified!');
+        console.warn('[useMessageEnhancements] This means the AI did not find any words to simplify.');
+        console.warn('[useMessageEnhancements] The text may already be simple, or the AI needs better prompting.');
+      }
+      
       setEnhancements(prev => ({
         ...prev,
         [messageId]: {
@@ -44,9 +65,21 @@ export function useMessageEnhancements() {
           simplified: result
         }
       }));
-      setMessageView(prev => ({ ...prev, [messageId]: 'simplified' }));
+      
+      console.log('[useMessageEnhancements] 🔄 Setting message view to "simplified"');
+      setMessageView(prev => {
+        const newView: {[messageId: string]: MessageView} = { ...prev, [messageId]: 'simplified' as MessageView };
+        console.log('[useMessageEnhancements] New messageView state:', newView);
+        return newView;
+      });
+      
+      console.log('[useMessageEnhancements] ========== SIMPLIFICATION COMPLETE ==========');
     } catch (error) {
-      console.error('Simplification error:', error);
+      console.error('[useMessageEnhancements] ❌ Simplification error:', error);
+      if (error instanceof Error) {
+        console.error('[useMessageEnhancements] Error message:', error.message);
+        console.error('[useMessageEnhancements] Error stack:', error.stack);
+      }
     } finally {
       setLoadingStates(prev => ({ 
         ...prev, 
@@ -68,7 +101,13 @@ export function useMessageEnhancements() {
     }));
     
     try {
+      console.log('[useMessageEnhancements] Calling summarizeText API...');
       const result = await nlpApi.summarizeText(content, format, 5);
+      console.log('[useMessageEnhancements] Summarization result:', result);
+      console.log('[useMessageEnhancements] Bullet points:', result.bullet_points);
+      console.log('[useMessageEnhancements] Key actions:', result.key_actions);
+      console.log('[useMessageEnhancements] Word count:', result.word_count);
+      
       setEnhancements(prev => ({
         ...prev,
         [messageId]: {
@@ -77,7 +116,7 @@ export function useMessageEnhancements() {
         }
       }));
     } catch (error) {
-      console.error('Summarization error:', error);
+      console.error('[useMessageEnhancements] Summarization error:', error);
     } finally {
       setLoadingStates(prev => ({ 
         ...prev, 
@@ -95,7 +134,7 @@ export function useMessageEnhancements() {
     const translationKey = `${targetLanguage}${targetDialect ? `-${targetDialect}` : ''}`;
     
     if (enhancements[messageId]?.translations?.[translationKey]) {
-      setMessageView(prev => ({ ...prev, [messageId]: 'translated' }));
+      setMessageView(prev => ({ ...prev, [messageId]: 'translated' as MessageView }));
       return;
     }
 
@@ -122,7 +161,7 @@ export function useMessageEnhancements() {
           }
         }
       }));
-      setMessageView(prev => ({ ...prev, [messageId]: 'translated' }));
+      setMessageView(prev => ({ ...prev, [messageId]: 'translated' as MessageView }));
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
@@ -150,7 +189,7 @@ export function useMessageEnhancements() {
   }
 
   function setView(messageId: string, view: MessageView) {
-    setMessageView(prev => ({ ...prev, [messageId]: view }));
+    setMessageView(prev => ({ ...prev, [messageId]: view as MessageView }));
   }
 
   return {

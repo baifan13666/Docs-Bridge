@@ -38,7 +38,8 @@ export function useStreamingRAG(options: UseStreamingRAGOptions = {}) {
     conversationId: string,
     query: string,
     queryEmbedding: number[],
-    modelMode: 'standard' | 'mini' = 'standard'
+    modelMode: 'standard' | 'mini' = 'standard',
+    originalQuery?: string  // Original user input, if different from optimized query
   ) => {
     setIsStreaming(true);
     setStreamedContent('');
@@ -55,6 +56,7 @@ export function useStreamingRAG(options: UseStreamingRAGOptions = {}) {
           query,
           query_embedding: queryEmbedding,
           model_mode: modelMode,
+          original_query: originalQuery,  // Pass original query for user message
         }),
       });
 

@@ -75,7 +75,7 @@ export function useVoiceOutput(options: UseVoiceOutputOptions = {}) {
         console.warn('[VoiceOutput] No voice found for language:', opts.language);
         console.log('[VoiceOutput] Available voices:', availableVoices.map(v => `${v.name} (${v.lang})`).join(', '));
         
-        // Set warning message for user
+        // Set warning message for user - but only if we're actually going to speak
         const languageNames: Record<string, string> = {
           'zh-CN': 'Chinese (Simplified)',
           'zh-TW': 'Chinese (Traditional)',
@@ -87,12 +87,16 @@ export function useVoiceOutput(options: UseVoiceOutputOptions = {}) {
         };
         
         const langName = languageNames[opts.language] || opts.language;
-        setMissingVoiceWarning(`No ${langName} voice installed. Using default voice.`);
         
         // Try to use any available voice as fallback
         if (availableVoices.length > 0) {
           utterance.voice = availableVoices[0];
           console.log('[VoiceOutput] Using fallback voice:', availableVoices[0].name);
+          // Show warning that we're using fallback
+          setMissingVoiceWarning(`No ${langName} voice installed. Using default voice.`);
+        } else {
+          // No voices available at all
+          setMissingVoiceWarning(`No ${langName} voice installed. Voice output may not work.`);
         }
       }
     }
@@ -110,8 +114,8 @@ export function useVoiceOutput(options: UseVoiceOutputOptions = {}) {
     utterance.onend = () => {
       console.log('[VoiceOutput] Finished speaking');
       setIsSpeaking(false);
-      // Clear warning after a delay
-      setTimeout(() => setMissingVoiceWarning(null), 5000);
+      // Only clear warning if speech completed successfully
+      // Keep warning visible if it was set due to missing voice pack
     };
 
     utterance.onerror = (event) => {
@@ -122,9 +126,10 @@ export function useVoiceOutput(options: UseVoiceOutputOptions = {}) {
         setMissingVoiceWarning('Voice output blocked. Please allow audio in browser settings.');
       } else if (event.error === 'network') {
         setMissingVoiceWarning('Network error. Please check your connection.');
-      } else {
+      } else if (event.error === 'synthesis-failed') {
         setMissingVoiceWarning('Voice output failed. Try installing language voice pack.');
       }
+      // Don't show warning for 'canceled' error (user stopped it)
     };
 
     utteranceRef.current = utterance;
@@ -135,6 +140,8 @@ export function useVoiceOutput(options: UseVoiceOutputOptions = {}) {
     if (isSupported) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
+      // Clear warning when user manually stops (not an error)
+      setMissingVoiceWarning(null);
     }
   }, [isSupported]);
 

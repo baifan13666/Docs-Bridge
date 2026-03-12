@@ -19,7 +19,6 @@ import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 import { getCachedEmbedding } from '@/lib/embeddings/cache';
-import { executeParallelPipeline, executeDualEmbeddingSearch } from '@/lib/rag/parallel-pipeline';
 
 // Route segment config
 export const runtime = 'nodejs';
@@ -102,6 +101,7 @@ export async function POST(request: NextRequest) {
           query_embedding: providedEmbedding,
           active_folders = null,
           model_mode = 'standard',
+          original_query, // Original user input (for display), if different from optimized query
         } = body;
 
         console.log(`[RAG Stream] RequestID: ${requestId} - Received request for conversation: ${conversation_id}`);
@@ -112,7 +112,12 @@ export async function POST(request: NextRequest) {
           return;
         }
 
+        // Use original_query for display if provided, otherwise use query
+        const displayQuery = original_query || query;
+
         console.log(`[RAG Stream] RequestID: ${requestId} - Starting streaming RAG pipeline...`);
+        console.log(`[RAG Stream] RequestID: ${requestId} - Display Query: ${displayQuery.substring(0, 100)}...`);
+        console.log(`[RAG Stream] RequestID: ${requestId} - Optimized Query: ${query.substring(0, 100)}...`);
         sendEvent('status', { step: 'started', message: 'Starting RAG pipeline...' });
 
         // Check if this is a guest conversation (temporary ID)
@@ -121,14 +126,14 @@ export async function POST(request: NextRequest) {
         let userMessage = null;
         
         if (!isGuestConversation) {
-          // Step 1: Save user message (only for authenticated users)
+          // Step 1: Save user message with DISPLAY query (original user input)
           sendEvent('status', { step: 'saving_user_message', message: 'Saving your message...' });
           const { data: savedUserMessage, error: userMsgError } = await supabase
             .from('chat_messages')
             .insert({
               conversation_id,
               role: 'user',
-              content: query
+              content: displayQuery  // Use original query for display
             })
             .select()
             .single();
@@ -142,91 +147,61 @@ export async function POST(request: NextRequest) {
           
           userMessage = savedUserMessage;
         } else {
-          // Guest user: create temporary message object (not saved to DB)
+          // Guest user: create temporary message object with DISPLAY query (not saved to DB)
           console.log(`[RAG Stream] RequestID: ${requestId} - Guest conversation, not saving user message to DB`);
           userMessage = {
             id: `guest-msg-${Date.now()}`,
             conversation_id,
             role: 'user',
-            content: query,
+            content: displayQuery,  // Use original query for display
             created_at: new Date().toISOString()
           };
         }
 
         sendEvent('user_message', { message: userMessage });
 
-        // Step 2: PARALLEL PIPELINE - Execute preprocessing in parallel (for authenticated users)
-        let pipelineResult = null;
-        if (!isGuest && user) {
-          sendEvent('status', { step: 'preprocessing', message: 'Processing query in parallel...' });
-          
-          try {
-            pipelineResult = await executeParallelPipeline(query, user.id, conversation_id);
-            console.log(`[RAG Stream] RequestID: ${requestId} - ✅ Parallel preprocessing completed in ${pipelineResult.timings.total}ms`);
-            console.log(`[RAG Stream] RequestID: ${requestId} - Language: ${pipelineResult.language}${pipelineResult.dialect ? ` (${pipelineResult.dialect})` : ''}`);
-            console.log(`[RAG Stream] RequestID: ${requestId} - Query rewritten: ${pipelineResult.originalQuery !== pipelineResult.rewrittenQuery ? 'Yes' : 'No'}`);
-            console.log(`[RAG Stream] RequestID: ${requestId} - Keywords added: ${pipelineResult.addedKeywords.length}`);
-            console.log(`[RAG Stream] RequestID: ${requestId} - Cache hits: original=${pipelineResult.originalCacheHit}, rewritten=${pipelineResult.rewrittenCacheHit}`);
-          } catch (pipelineError) {
-            console.error(`[RAG Stream] RequestID: ${requestId} - Parallel pipeline failed:`, pipelineError);
-            // Continue with fallback approach
-          }
-        }
-
-        // Step 3: Semantic search
+        // Step 2: Semantic search using client-provided embedding
+        // Note: Language detection and query optimization are handled client-side
         sendEvent('status', { step: 'searching', message: 'Searching knowledge base...' });
         
         let searchResults = null;
         if (!isGuest && user) {
-          if (pipelineResult) {
-            // Use dual embedding search from parallel pipeline
-            searchResults = await executeDualEmbeddingSearch(
-              supabase,
-              user.id,
-              pipelineResult.originalEmbedding,
-              pipelineResult.rewrittenEmbedding,
-              active_folders,
-              0.7, // match_threshold
-              10   // match_count
-            );
-          } else {
-            // Fallback: use provided embedding or check cache
-            let queryEmbedding = providedEmbedding;
-            if (!queryEmbedding) {
-              try {
-                const cachedResult = await getCachedEmbedding(query);
-                if (cachedResult) {
-                  queryEmbedding = cachedResult.embedding;
-                  console.log(`[RAG Stream] RequestID: ${requestId} - Got embedding from cache (${cachedResult.isFromCache ? 'hit' : 'miss'})`);
-                } else {
-                  // No cache hit - client must provide embedding
-                  console.error(`[RAG Stream] RequestID: ${requestId} - No cached embedding and none provided`);
-                  sendEvent('error', { error: 'Query embedding required. Please generate embedding on client-side first.' });
-                  controller.close();
-                  return;
-                }
-              } catch (embeddingError) {
-                console.error(`[RAG Stream] RequestID: ${requestId} - Failed to get embedding:`, embeddingError);
-                sendEvent('error', { error: 'Failed to lookup query embedding' });
+          // Use provided embedding or check cache
+          let queryEmbedding = providedEmbedding;
+          if (!queryEmbedding) {
+            try {
+              const cachedResult = await getCachedEmbedding(query);
+              if (cachedResult) {
+                queryEmbedding = cachedResult.embedding;
+                console.log(`[RAG Stream] RequestID: ${requestId} - Got embedding from cache (${cachedResult.isFromCache ? 'hit' : 'miss'})`);
+              } else {
+                // No cache hit - client must provide embedding
+                console.error(`[RAG Stream] RequestID: ${requestId} - No cached embedding and none provided`);
+                sendEvent('error', { error: 'Query embedding required. Please generate embedding on client-side first.' });
                 controller.close();
                 return;
               }
+            } catch (embeddingError) {
+              console.error(`[RAG Stream] RequestID: ${requestId} - Failed to get embedding:`, embeddingError);
+              sendEvent('error', { error: 'Failed to lookup query embedding' });
+              controller.close();
+              return;
             }
-
-            const { data: results, error: searchError } = await supabase
-              .rpc('search_chunks_small', {
-                query_embedding: queryEmbedding,
-                match_threshold: 0.7,
-                match_count: 10,
-                user_id_param: user.id,
-                active_folder_ids: active_folders
-              });
-
-            if (searchError) {
-              console.error('[RAG Stream] Search error:', searchError);
-            }
-            searchResults = results;
           }
+
+          const { data: results, error: searchError } = await supabase
+            .rpc('search_chunks_small', {
+              query_embedding: queryEmbedding,
+              match_threshold: 0.7,
+              match_count: 10,
+              user_id_param: user.id,
+              active_folder_ids: active_folders
+            });
+
+          if (searchError) {
+            console.error('[RAG Stream] Search error:', searchError);
+          }
+          searchResults = results;
         }
 
         let retrievedChunks: SearchResult[] = [];
@@ -259,18 +234,12 @@ export async function POST(request: NextRequest) {
         
         let structuredMemory;
         if (!isGuest && user) {
-          if (pipelineResult && pipelineResult.structuredMemory) {
-            // Use structured memory from parallel pipeline
-            structuredMemory = pipelineResult.structuredMemory;
-            console.log(`[RAG Stream] RequestID: ${requestId} - Using structured memory from parallel pipeline`);
-          } else {
-            // Fallback: build structured memory
-            try {
-              structuredMemory = await buildStructuredMemory(user.id, conversation_id, 4000);
-            } catch (memoryError) {
-              console.error('[RAG Stream] Memory error:', memoryError);
-              structuredMemory = null;
-            }
+          // Build structured memory
+          try {
+            structuredMemory = await buildStructuredMemory(user.id, conversation_id, 4000);
+          } catch (memoryError) {
+            console.error('[RAG Stream] Memory error:', memoryError);
+            structuredMemory = null;
           }
         } else {
           structuredMemory = null;
@@ -297,30 +266,17 @@ export async function POST(request: NextRequest) {
           ? `\n\n${formatStructuredMemoryForPrompt(structuredMemory)}\n`
           : '';
         
-        // Build enhanced system prompt with parallel pipeline info
-        let queryAnalysis = '';
-        if (pipelineResult) {
-          queryAnalysis = `
-Query Analysis:
-- Original: "${pipelineResult.originalQuery}"
-- Language: ${pipelineResult.language}${pipelineResult.dialect ? ` (${pipelineResult.dialect})` : ''}
-- Rewritten: "${pipelineResult.rewrittenQuery}"
-- Keywords added: ${pipelineResult.addedKeywords.join(', ')}
-- Cache performance: Original ${pipelineResult.originalCacheHit ? 'HIT' : 'MISS'}, Rewritten ${pipelineResult.rewrittenCacheHit ? 'HIT' : 'MISS'}
-`;
-        }
-        
         const systemPrompt = retrievedChunks.length > 0
           ? `You are a helpful government policy assistant. Answer questions based ONLY on the provided documents. 
 If the answer is not in the documents, say "I don't have enough information to answer that question."
 Always cite which document you're referencing (e.g., "According to Document 1...").
-${queryAnalysis}${memoryContext}
+${memoryContext}
 Context Documents:
 ${context}`
           : `You are a helpful government policy assistant. 
 The user's question could not be matched with any documents in the knowledge base.
 Politely inform them that you don't have information about their specific question.
-${queryAnalysis}${memoryContext}`;
+${memoryContext}`;
 
         let fullResponse = '';
         let tokensUsed = 0;
