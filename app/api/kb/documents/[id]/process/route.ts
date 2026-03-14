@@ -5,7 +5,7 @@
  * 
  * Processes a document for RAG:
  * 1. Chunks the document content
- * 2. Generates embeddings using bge-small-en-v1.5 (384-dim)
+ * 2. Generates embeddings using intfloat/e5-small (384-dim)
  * 3. Saves chunks to database
  * 
  * This endpoint is called:
@@ -125,7 +125,7 @@ export async function POST(
 
     // Step 2: Generate embeddings for all chunks
     console.log('[Process Document] Step 2: Generating embeddings...');
-    console.log('[Process Document] Using bge-small-en-v1.5 (384-dim) for consistency');
+    console.log('[Process Document] Using intfloat/e5-small (384-dim) for consistency');
     
     const chunkTexts = chunks.map(c => c.text);
     const embeddings: number[][] = [];
@@ -153,7 +153,7 @@ export async function POST(
       document_id: documentId,
       chunk_text: chunk.text,
       chunk_index: chunk.index,
-      embedding: embeddings[index],  // 384-dim bge-small-en-v1.5
+      embedding: embeddings[index],  // 384-dim intfloat/e5-small
       token_count: chunk.tokenCount,
       language: document.language || null
     }));

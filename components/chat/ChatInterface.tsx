@@ -60,7 +60,7 @@ export default function ChatInterface({
   } = useMessageEnhancements();
   const { detectedLanguage, detecting: detectingLanguage, detectLanguage, getLanguageName } = useLanguageDetection();
   const { isSupported: voiceOutputSupported, isSpeaking, missingVoiceWarning, speak, stop: stopSpeaking } = useVoiceOutput();
-  const { generateEmbedding } = useClientEmbedding();
+  const { generateEmbeddingWithCache } = useClientEmbedding();
   const { 
     isStreaming, 
     streamedContent,
@@ -188,10 +188,24 @@ export default function ChatInterface({
       throw error;
     }
     
-    // Generate embedding for query
+    // Generate embedding with cache check (client-side first, then server fallback)
     pipeline.updateStep(3, 'active');
-    const embeddingResult = await generateEmbedding(queryText);
-    const embedding = embeddingResult.embedding;
+    let embedding: number[];
+    let embeddingSource: 'cache' | 'client' | 'server' = 'cache';
+    
+    try {
+      // Try cache + client-side generation first
+      const embeddingResult = await generateEmbeddingWithCache(queryText);
+      embedding = embeddingResult.embedding;
+      embeddingSource = embeddingResult.cached ? 'cache' : 'client';
+      console.log(`[ChatInterface] Embedding generated from: ${embeddingSource}`);
+    } catch (clientError) {
+      console.warn('[ChatInterface] Client-side embedding failed, will use server fallback:', clientError);
+      // Don't set embedding here - let server handle it
+      embedding = []; // Empty array signals server to generate
+      embeddingSource = 'server';
+    }
+    
     pipeline.updateStep(3, 'completed');
     
     // Create temporary streaming message

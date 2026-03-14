@@ -11,7 +11,7 @@ import { pipeline, env } from '@huggingface/transformers';
 env.allowLocalModels = false;
 
 // Model configuration
-const MODEL = 'Xenova/bge-small-en-v1.5'; // 384-dim embedding model
+const MODEL = 'Xenova/multilingual-e5-small'; // 384-dim embedding model
 const TASK = 'feature-extraction';
 
 /**

@@ -22,6 +22,7 @@ export interface EmbeddingProgress {
 
 export interface UseClientEmbeddingReturn {
   generateEmbedding: (text: string) => Promise<EmbeddingResult>;
+  generateEmbeddingWithCache: (text: string) => Promise<EmbeddingResult>;
   isReady: boolean;
   isLoading: boolean;
   progress: EmbeddingProgress | null;
@@ -159,8 +160,67 @@ export function useClientEmbedding(): UseClientEmbeddingReturn {
     return promise;
   }, []);
 
+  // Generate embedding with cache check
+  const generateEmbeddingWithCache = useCallback(async (text: string): Promise<EmbeddingResult> => {
+    if (!text || text.trim().length === 0) {
+      throw new Error('Text cannot be empty');
+    }
+    
+    try {
+      // Step 1: Check cache first
+      console.log('[Client Embedding] Checking cache for query...');
+      const cacheResponse = await fetch('/api/embeddings/cache', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: text }),
+      });
+      
+      if (cacheResponse.ok) {
+        const cacheData = await cacheResponse.json();
+        if (cacheData.embedding) {
+          console.log('[Client Embedding] ✅ Cache hit!');
+          return {
+            embedding: cacheData.embedding,
+            dimension: cacheData.embedding.length,
+            cached: true,
+          };
+        }
+      }
+      
+      console.log('[Client Embedding] ❌ Cache miss, generating locally...');
+      
+      // Step 2: Generate locally using Web Worker
+      try {
+        const result = await generateEmbedding(text);
+        
+        // Step 3: Store in cache for future use
+        console.log('[Client Embedding] Storing embedding in cache...');
+        fetch('/api/embeddings/cache/store', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            query: text, 
+            embedding: result.embedding 
+          }),
+        }).catch(err => {
+          console.warn('[Client Embedding] Failed to cache embedding:', err);
+        });
+        
+        return result;
+      } catch (workerError) {
+        console.error('[Client Embedding] Local generation failed:', workerError);
+        throw workerError; // Let caller handle fallback to server
+      }
+      
+    } catch (error) {
+      console.error('[Client Embedding] Error in generateEmbeddingWithCache:', error);
+      throw error;
+    }
+  }, [generateEmbedding]);
+
   return {
     generateEmbedding,
+    generateEmbeddingWithCache,
     isReady,
     isLoading,
     progress,

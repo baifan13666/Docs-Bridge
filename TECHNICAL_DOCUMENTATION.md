@@ -69,17 +69,18 @@ Multi-stage NLP pipeline that:
   - **RAG Mini**: Trinity Mini (fast responses)
   - **NLP Tasks**: Trinity Mini (simplification, summarization, translation)
 - **Embeddings**: 
-  - **Query**: bge-small-en-v1.5 (384-dim) via @huggingface/transformers
-  - **Documents**: bge-small-en-v1.5 (384-dim) for coarse search
-  - **Reranking**: bge-large-en-v1.5 (1024-dim) for precision
+  - **Client-side**: multilingual-e5-small (384-dim) via @huggingface/transformers in Web Worker
+  - **Server-side**: intfloat/multilingual-e5-small (384-dim) via external Hugging Face Inference API
+  - **Task prefixes**: E5 model uses "query: " prefix for search queries, "passage: " prefix for documents
+  - **Reranking**: altaidevorg/BGE-M3-Distill-8L (1024-dim) via external API
 - **LangChain**: @langchain/textsplitters (document chunking only)
 - **Response Healing**: Automatic JSON repair and retry via @openrouter/ai-sdk-provider
 - **Architecture**: Vercel AI SDK for streaming, LangChain for workflow orchestration only
 
 ### Key Libraries
-- **@huggingface/transformers**: 3.8.1 (server-side embeddings with WASM)
-- **onnxruntime-web**: 1.24.3 (WASM runtime for transformers)
-- **onnxruntime-common**: 1.24.3 (common ONNX utilities)
+- **@huggingface/transformers**: 3.8.1 (client-side embeddings in Web Worker only)
+- **onnxruntime-web**: 1.24.3 (WASM runtime for client-side transformers)
+- **onnxruntime-common**: 1.24.3 (common ONNX utilities for client-side)
 - **@browser-ai/transformers-js**: 2.1.6 (WebGPU support)
 - **zod**: 4.3.6 (schema validation)
 - **ai**: 6.0.116 (Vercel AI SDK)
@@ -253,70 +254,77 @@ Multi-stage NLP pipeline that:
 
 ## 5. Core Features
 
-### 5.1 Parallel RAG Pipeline
+### 5.1 Client-Side Pipeline
 
-**Location**: `lib/rag/parallel-pipeline.ts`
+**Location**: `components/chat/ChatInterface.tsx`
 
-**Purpose**: Optimizes RAG performance by running independent operations in parallel
+**Purpose**: Optimizes RAG performance by running preprocessing on the client
 
 **Flow**:
 ```
-Phase 1 (Parallel):
-├─ Language Detection (LFM 2.5 Thinking)
-├─ Original Query Embedding (with cache)
-└─ Structured Memory Building
+Phase 1 (Client-Side - Parallel):
+├─ Language Detection (API: /api/nlp/detect)
+├─ Query Optimization (API: /api/nlp/rewrite)
+└─ Embedding Generation (Web Worker with cache-first strategy)
 
-Phase 2 (Sequential):
-└─ Query Rewriting (depends on language detection)
-
-Phase 3 (Sequential):
-└─ Rewritten Query Embedding (depends on rewriting)
+Phase 2 (Server-Side - Sequential):
+├─ Semantic Search (pgvector with client-provided embedding)
+├─ Context Building (structured memory + retrieved chunks)
+└─ LLM Streaming (Vercel AI SDK)
 ```
 
-**Performance**: 60-70% faster than sequential pipeline
+**Performance**: Client-side preprocessing reduces server load and improves response time
 
 **Key Functions**:
-- `executeParallelPipeline(query, userId, conversationId)` - Main pipeline orchestrator
-- `executeDualEmbeddingSearch(supabase, userId, originalEmbedding, rewrittenEmbedding, activeFolders, matchThreshold, matchCount)` - Searches with both embeddings
+- `handleSendMessage()` in ChatInterface - Main orchestrator
+- `generateEmbeddingWithCache()` in useClientEmbedding - Cache-first embedding generation
+- `executeStreamingQuery()` in useStreamingRAG - Server-side streaming
 
-**Used By**: `app/api/chat/query-stream/route.ts`
+**Used By**: `components/chat/ChatInterface.tsx`
 
 ---
 
 ### 5.2 Embedding Cache System
 
-**Location**: `lib/embeddings/cache.ts`
+**Location**: `lib/embeddings/cache.ts` + `hooks/useClientEmbedding.ts`
 
 **Purpose**: Intelligent caching to avoid regenerating embeddings
 
-**Cache Strategy**:
-1. **Exact Match** (query_embeddings table)
+**Cache Strategy** (Three-tier fallback):
+1. **Check Cache** (API: /api/embeddings/cache)
    - Hash-based lookup using SHA-256
    - Normalizes query (lowercase, remove punctuation, stop words)
    - Tracks hit count for analytics
+   - Returns cached embedding if found
 
-2. **Template Match** (query_templates table)
-   - Semantic similarity matching (85%+ threshold)
-   - Pre-warmed common queries
-   - Language-aware boosting (+5% for language match)
+2. **Generate Client-Side** (Web Worker)
+   - Uses Xenova/multilingual-e5-small (384-dim)
+   - Runs in Web Worker (non-blocking)
+   - Stores result in cache via API
+   - Typical time: 100-500ms after model loaded
 
-3. **Generate New** (fallback)
-   - Uses bge-small-en-v1.5 (384-dim)
-   - Caches result for future use
+3. **Generate Server-Side** (Fallback)
+   - Uses external Hugging Face Inference API
+   - intfloat/multilingual-e5-small (384-dim)
+   - Automatically adds "query: " prefix for search queries
+   - Only triggered if client sends empty embedding array
+   - Typical time: 1-3s
 
 **Key Functions**:
-- `getCachedEmbedding(query, language, dialect)` - Main cache lookup
-- `warmupQueryTemplates()` - Preload common queries
-- `getCacheStats()` - Analytics
+- `generateEmbeddingWithCache()` in useClientEmbedding - Main entry point
+- `getCachedEmbedding()` in cache.ts - Cache lookup
+- `cacheEmbedding()` in cache.ts - Store in cache
+- `generateQueryEmbedding()` in query.ts - Server-side generation
 
 **Performance Impact**: 
 - Cache hit: ~10-50ms
-- Cache miss: ~200-500ms (embedding generation)
+- Client generation: ~100-500ms (model loaded), ~2-5s (first time)
+- Server generation: ~1-3s (fallback only)
 - 80%+ cache hit rate expected in production
 
 **Used By**: 
-- `app/api/embeddings/route.ts`
-- `lib/rag/parallel-pipeline.ts`
+- `components/chat/ChatInterface.tsx`
+- `app/api/chat/query-stream/route.ts`
 
 ---
 
@@ -825,7 +833,9 @@ docs-bridge/
 #### POST /api/embeddings
 **File**: `app/api/embeddings/route.ts`
 
-**Purpose**: Generate embeddings with intelligent caching
+**Purpose**: Generate embeddings with intelligent caching (DEPRECATED - use client-side generation)
+
+**Note**: This endpoint is deprecated in favor of client-side embedding generation with Web Worker. Server-side generation is now only used as a fallback in `/api/chat/query-stream` when client doesn't provide an embedding.
 
 **Request** (single):
 ```typescript
@@ -846,7 +856,7 @@ docs-bridge/
 {
   embedding: number[];      // 384-dim vector
   dimension: 384;
-  modelName: "Xenova/bge-small-en-v1.5";
+  modelName: "intfloat/multilingual-e5-small";  // External API model
   cached: boolean;
   cacheSource?: 'exact' | 'template' | 'generated';
   similarity?: number;      // For template matches

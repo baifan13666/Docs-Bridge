@@ -1,123 +1,82 @@
 /**
  * Query Embedding Generation for RAG Search
  * 
- * Uses bge-small-en-v1.5 (384-dim) to match the Crawler Service's embedding_small
- * This ensures query embeddings are compatible with document embeddings in the database
+ * Uses external Hugging Face Inference API for embedding generation
+ * This avoids running heavy ML models on Vercel serverless functions
  * 
- * IMPORTANT: This module ONLY uses @huggingface/transformers locally.
- * No external API calls are made for embedding generation.
+ * Supported models:
+ * - intfloat/multilingual-e5-small (384-dim) - Default, multilingual
+ * - altaidevorg/BGE-M3-Distill-8L (1024-dim) - Higher quality
+ * 
+ * E5 Model requires task-specific prefixes:
+ * - "query: " prefix for search queries
+ * - "passage: " prefix for documents/passages
  */
 
-const MODEL = 'Xenova/bge-small-en-v1.5'; // 384-dim (still using Xenova namespace for model)
+const E5_API_URL = process.env.E5_HG_EMBEDDING_SERVER_API_URL || 'https://edusocial-e5-small-embedding-server.hf.space';
+const BGE_API_URL = process.env.BGE_HG_EMBEDDING_SERVER_API_URL || 'https://edusocial-bge-m3-embedding-server.hf.space';
+
+const DEFAULT_MODEL = 'e5-small';
 const EMBEDDING_DIM = 384;
 
-let pipeline_instance: any = null;
-let isInitializing = false;
-let transformersAvailable: boolean | null = null;
+export type EmbeddingModel = 'e5-small' | 'bge-m3';
+export type EmbeddingTask = 'query' | 'passage';
 
-// Dynamically import and configure transformers
-async function getTransformersModule() {
-  const { pipeline, env } = await import('@huggingface/transformers');
-  
-  // CRITICAL: Force WASM backend FIRST to prevent native library search
-  // This prevents the "libonnxruntime.so.1: cannot open shared object file" error
-  // By prioritizing 'wasm' over 'cpu', we use onnxruntime-web instead of onnxruntime-node
-  if (env.backends?.onnx?.wasm) {
-    env.backends.onnx.wasm.proxy = false;
-    env.backends.onnx.wasm.numThreads = 1;
-    env.backends.onnx.wasm.simd = true;
-  }
-  
-  // Configure environment for WASM backend (no native dependencies needed)
-  env.allowLocalModels = false;
-  env.allowRemoteModels = true;
-  env.useBrowserCache = false;
-  env.cacheDir = '/tmp/.transformers-cache';
-  
-  return { pipeline, env };
+interface SingleEmbeddingResponse {
+  embedding: number[];
+  dim: number;
 }
 
-// Check if transformers is available
-async function checkTransformersAvailability() {
-  // Return cached result if already checked
-  if (transformersAvailable !== null) {
-    return transformersAvailable ? await getTransformersModule() : null;
-  }
-  
-  try {
-    const transformers = await getTransformersModule();
-    transformersAvailable = true;
-    return transformers;
-  } catch (error) {
-    console.error('[Query Embeddings] Transformers not available:', error instanceof Error ? error.message : String(error));
-    transformersAvailable = false;
-    return null;
-  }
+interface BatchEmbeddingResponse {
+  embeddings: number[][];
+  count: number;
+  dim: number;
 }
 
 /**
- * Generate 384-dim query embedding
- * Compatible with Crawler Service's embedding_small
+ * Generate 384-dim query embedding using external API
  * 
- * This function ONLY uses local transformers - no external API calls
+ * @param text - The text to embed
+ * @param task - Task type: 'query' for search queries, 'passage' for documents (default: 'query')
+ * @param model - Which model to use ('e5-small' or 'bge-m3')
+ * @returns 384-dim or 1024-dim embedding vector
  */
-export async function generateQueryEmbedding(query: string): Promise<number[]> {
+export async function generateQueryEmbedding(
+  text: string,
+  task: EmbeddingTask = 'query',
+  model: EmbeddingModel = 'e5-small'
+): Promise<number[]> {
   try {
-    // Check if transformers is available
-    const transformers = await checkTransformersAvailability();
-    if (!transformers) {
-      throw new Error('Transformers library not available. This is required for embedding generation. Please ensure @huggingface/transformers and its dependencies (onnxruntime-web, onnxruntime-common) are properly installed.');
-    }
+    const apiUrl = model === 'bge-m3' ? BGE_API_URL : E5_API_URL;
     
-    // Initialize model if needed (with proper locking)
-    if (!pipeline_instance) {
-      // Wait if another initialization is in progress
-      while (isInitializing) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      // Double-check after waiting
-      if (!pipeline_instance) {
-        try {
-          isInitializing = true;
-          console.log('[Query Embeddings] Initializing bge-small-en-v1.5 (384-dim) with WASM backend...');
-          
-          // CRITICAL: Set backend priority to force WASM usage
-          // This must be done BEFORE pipeline initialization
-          if (transformers.env.backends?.onnx?.wasm) {
-            transformers.env.backends.onnx.wasm.proxy = false;
-          }
-          
-          pipeline_instance = await transformers.pipeline('feature-extraction', MODEL, {
-            dtype: 'q8', // Quantized 8-bit (default for WASM)
-          });
-          
-          console.log('[Query Embeddings] ✅ bge-small-en-v1.5 model ready (WASM)');
-        } catch (error) {
-          console.error('[Query Embeddings] Failed to initialize bge-small-en-v1.5:', error);
-          pipeline_instance = null;
-          throw error;
-        } finally {
-          isInitializing = false;
-        }
-      }
-    }
+    console.log(`[Query Embeddings] Generating embedding via ${model} API...`);
+    console.log(`[Query Embeddings] Task: ${task}, Text: "${text.substring(0, 50)}..."`);
     
-    console.log(`[Query Embeddings] Generating embedding for: "${query.substring(0, 50)}..."`);
-    
-    const output = await pipeline_instance(query, {
-      pooling: 'mean',
-      normalize: true,
+    const response = await fetch(`${apiUrl}/embed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        input: text,  // Single query uses "input" field
+        task: task,   // 'query' or 'passage' - server will add prefix
+      }),
     });
     
-    const embedding = Array.from(output.data) as number[];
-    
-    if (embedding.length !== EMBEDDING_DIM) {
-      throw new Error(`Expected ${EMBEDDING_DIM}-dim embedding, got ${embedding.length}-dim`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API request failed: ${response.status} ${errorText}`);
     }
     
-    console.log(`[Query Embeddings] ✅ Generated ${embedding.length}-dim embedding`);
-    return embedding;
+    const data: SingleEmbeddingResponse = await response.json();
+    
+    if (!data.embedding || data.embedding.length === 0) {
+      throw new Error('No embedding returned from API');
+    }
+    
+    console.log(`[Query Embeddings] ✅ Generated ${data.dim}-dim embedding via ${model} (task: ${task})`);
+    
+    return data.embedding;
   } catch (error) {
     console.error('[Query Embeddings] Error generating embedding:', error);
     throw new Error(`Failed to generate query embedding: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -126,17 +85,48 @@ export async function generateQueryEmbedding(query: string): Promise<number[]> {
 
 /**
  * Generate batch query embeddings
+ * 
+ * @param texts - Array of texts to embed
+ * @param task - Task type: 'query' for search queries, 'passage' for documents (default: 'query')
+ * @param model - Which model to use
+ * @returns Array of embedding vectors
  */
-export async function generateBatchQueryEmbeddings(queries: string[]): Promise<number[][]> {
+export async function generateBatchQueryEmbeddings(
+  texts: string[],
+  task: EmbeddingTask = 'query',
+  model: EmbeddingModel = 'e5-small'
+): Promise<number[][]> {
   try {
-    console.log(`[Query Embeddings] Generating batch embeddings for ${queries.length} queries...`);
+    const apiUrl = model === 'bge-m3' ? BGE_API_URL : E5_API_URL;
     
-    const embeddings = await Promise.all(
-      queries.map(query => generateQueryEmbedding(query))
-    );
+    console.log(`[Query Embeddings] Generating batch embeddings for ${texts.length} texts via ${model}...`);
+    console.log(`[Query Embeddings] Task: ${task}`);
     
-    console.log(`[Query Embeddings] ✅ Batch completed: ${embeddings.length} embeddings`);
-    return embeddings;
+    const response = await fetch(`${apiUrl}/embed/batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: texts,  // Batch uses "inputs" field
+        task: task,     // 'query' or 'passage' - server will add prefix
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API request failed: ${response.status} ${errorText}`);
+    }
+    
+    const data: BatchEmbeddingResponse = await response.json();
+    
+    if (!data.embeddings || data.embeddings.length !== texts.length) {
+      throw new Error(`Expected ${texts.length} embeddings, got ${data.embeddings?.length || 0}`);
+    }
+    
+    console.log(`[Query Embeddings] ✅ Batch completed: ${data.count} embeddings (${data.dim}-dim, task: ${task})`);
+    
+    return data.embeddings;
   } catch (error) {
     console.error('[Query Embeddings] Error generating batch embeddings:', error);
     throw new Error(`Failed to generate batch embeddings: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -146,12 +136,17 @@ export async function generateBatchQueryEmbeddings(queries: string[]): Promise<n
 /**
  * Get model information
  */
-export function getModelInfo() {
+export function getModelInfo(model: EmbeddingModel = 'e5-small') {
+  const apiUrl = model === 'bge-m3' ? BGE_API_URL : E5_API_URL;
+  const dimension = model === 'bge-m3' ? 1024 : 384;
+  const modelName = model === 'bge-m3' ? 'altaidevorg/BGE-M3-Distill-8L' : 'intfloat/multilingual-e5-small';
+  
   return {
-    modelName: MODEL,
-    embeddingDim: EMBEDDING_DIM,
-    isInitialized: pipeline_instance !== null,
-    isInitializing,
-    transformersAvailable,
+    modelName,
+    embeddingDim: dimension,
+    apiUrl,
+    model,
   };
 }
+
+

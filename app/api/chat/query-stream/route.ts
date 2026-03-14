@@ -4,7 +4,7 @@
  * POST /api/chat/query-stream
  * 
  * Complete RAG pipeline with streaming LLM response:
- * 1. Semantic search with bge-small (384-dim)
+ * 1. Semantic search with e5-small (384-dim)
  * 2. Build context from retrieved chunks
  * 3. Stream LLM response with RAG context
  * 4. Save messages to database
@@ -18,7 +18,8 @@ import { createModelWithHealing, ModelPresets } from '@/lib/ai';
 import { calculateConfidenceScore } from '@/lib/nlp/confidence-score';
 import { buildStructuredMemory, formatStructuredMemoryForPrompt } from '@/lib/nlp/structured-memory';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
-import { getCachedEmbedding } from '@/lib/embeddings/cache';
+import { cacheEmbedding } from '@/lib/embeddings/cache';
+import { generateQueryEmbedding } from '@/lib/embeddings/query';
 
 // Route segment config
 export const runtime = 'nodejs';
@@ -160,33 +161,36 @@ export async function POST(request: NextRequest) {
 
         sendEvent('user_message', { message: userMessage });
 
-        // Step 2: Semantic search using client-provided embedding
-        // Note: Language detection and query optimization are handled client-side
+        // Step 2: Semantic search using provided embedding or generate server-side
+        // Note: Client should provide embedding after checking cache and generating locally
         sendEvent('status', { step: 'searching', message: 'Searching knowledge base...' });
         
         let searchResults = null;
         if (!isGuest && user) {
-          // Use provided embedding or check cache
+          // Use provided embedding, or generate server-side as last resort
           let queryEmbedding = providedEmbedding;
-          if (!queryEmbedding) {
+          
+          // Only generate server-side if client didn't provide embedding (empty array or null)
+          if (!queryEmbedding || queryEmbedding.length === 0) {
+            console.log(`[RAG Stream] RequestID: ${requestId} - No embedding provided, generating server-side...`);
+            sendEvent('status', { step: 'generating_embedding', message: 'Generating query embedding...' });
+            
             try {
-              const cachedResult = await getCachedEmbedding(query);
-              if (cachedResult) {
-                queryEmbedding = cachedResult.embedding;
-                console.log(`[RAG Stream] RequestID: ${requestId} - Got embedding from cache (${cachedResult.isFromCache ? 'hit' : 'miss'})`);
-              } else {
-                // No cache hit - client must provide embedding
-                console.error(`[RAG Stream] RequestID: ${requestId} - No cached embedding and none provided`);
-                sendEvent('error', { error: 'Query embedding required. Please generate embedding on client-side first.' });
-                controller.close();
-                return;
-              }
-            } catch (embeddingError) {
-              console.error(`[RAG Stream] RequestID: ${requestId} - Failed to get embedding:`, embeddingError);
-              sendEvent('error', { error: 'Failed to lookup query embedding' });
+              // Use 'query' task for search queries (adds "query: " prefix)
+              queryEmbedding = await generateQueryEmbedding(query, 'query');
+              console.log(`[RAG Stream] RequestID: ${requestId} - ✅ Generated ${queryEmbedding.length}-dim embedding server-side`);
+              
+              // Cache the newly generated embedding for future use
+              await cacheEmbedding(query, queryEmbedding);
+              console.log(`[RAG Stream] RequestID: ${requestId} - ✅ Cached new embedding`);
+            } catch (generateError) {
+              console.error(`[RAG Stream] RequestID: ${requestId} - Failed to generate embedding server-side:`, generateError);
+              sendEvent('error', { error: 'Failed to generate query embedding. Please try again.' });
               controller.close();
               return;
             }
+          } else {
+            console.log(`[RAG Stream] RequestID: ${requestId} - Using client-provided embedding (${queryEmbedding.length}-dim)`);
           }
 
           const { data: results, error: searchError } = await supabase

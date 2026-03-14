@@ -4,7 +4,7 @@
  * POST /api/embeddings
  * 
  * Generate embeddings for text on the server side
- * Uses bge-small-en-v1.5 (384-dim) for query embeddings
+ * Uses intfloat/e5-small (384-dim) for query embeddings
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -35,7 +35,7 @@ export const dynamic = 'force-dynamic';
  *   embedding: number[];       // Single embedding (if text provided)
  *   embeddings: number[][];    // Multiple embeddings (if texts provided)
  *   dimension: number;         // Embedding dimension (384)
- *   modelName: string;         // Model used (bge-small-en-v1.5)
+ *   modelName: string;         // Model used (intfloat/e5-small)
  * }
  */
 export async function POST(request: NextRequest) {

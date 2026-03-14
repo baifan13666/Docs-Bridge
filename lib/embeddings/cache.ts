@@ -7,9 +7,10 @@
  * - Cache hit tracking and analytics
  * - Automatic cache warming
  * 
- * NOTE: This module NO LONGER generates embeddings server-side.
- * All embedding generation happens client-side in the browser.
- * This module only handles cache lookup and storage.
+ * NOTE: This module handles cache lookup and storage.
+ * Embedding generation can happen either:
+ * 1. Client-side (preferred) - in the browser using @huggingface/transformers
+ * 2. Server-side (fallback) - when cache misses and client doesn't provide embedding
  */
 
 import { createClient } from '@/lib/supabase/server';
@@ -85,10 +86,10 @@ function cosineSimilarity(a: number[], b: number[]): number {
  * Flow:
  * 1. Check exact hash match in cache
  * 2. If not found, check semantic similarity with templates
- * 3. Return null if no match found (client must generate)
+ * 3. Return null if no match found (caller can generate if needed)
  * 
- * NOTE: This function NO LONGER generates embeddings.
- * If no cache hit, return null and let client generate.
+ * NOTE: This function does NOT generate embeddings.
+ * If no cache hit, return null and let caller decide whether to generate.
  */
 export async function getCachedEmbedding(
   query: string,
@@ -157,8 +158,8 @@ export async function getCachedEmbedding(
     console.warn('[Embedding Cache] Template matching error:', error);
   }
 
-  // Step 3: No cache hit - return null (client will generate)
-  console.log('[Embedding Cache] ❌ No cache hit - client must generate embedding');
+  // Step 3: No cache hit - return null (caller will generate)
+  console.log('[Embedding Cache] ❌ No cache hit - caller must generate embedding');
   return null;
 }
 
@@ -183,7 +184,7 @@ async function findBestTemplate(
 /**
  * Cache an embedding in the database
  */
-async function cacheEmbedding(
+export async function cacheEmbedding(
   query: string,
   embedding: number[],
   language?: string,

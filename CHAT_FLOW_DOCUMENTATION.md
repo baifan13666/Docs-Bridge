@@ -110,27 +110,29 @@ try {
 ```typescript
 // Generate embedding for optimized query
 pipeline.updateStep(3, 'active');
-const embeddingResult = await generateEmbedding(queryText);
+const embeddingResult = await generateEmbeddingWithCache(queryText);
 const embedding = embeddingResult.embedding;
 pipeline.updateStep(3, 'completed');
 ```
 
 **What happens**:
-- Uses Transformers.js (`Xenova/bge-small-en-v1.5`) to generate 384-dim embedding
+- Uses Transformers.js (`Xenova/multilingual-e5-small`) to generate 384-dim embedding
 - Runs in Web Worker (non-blocking, doesn't freeze UI)
-- Caches embedding in IndexedDB for future use
+- Caches embedding in database via API for future use
 - Updates pipeline step 3 (Embedding Generation)
 - Embedding is sent to server for semantic search
 
 **Architecture**: 
-- Client-only embedding (no server-side embedding)
+- Client-only embedding (no server-side embedding unless fallback)
 - Model loaded once and reused for all queries
-- Typical generation time: 100-300ms on modern devices
+- Typical generation time: 100-300ms on modern devices after model loaded
 
 **Why client-side?**
 - Vercel serverless functions have cold start issues
 - Client-side is faster after initial model load
 - Reduces server costs and load
+
+**Fallback**: If client-side generation fails, server will generate using external API
 
 ---
 
@@ -301,17 +303,30 @@ if (!isGuestConversation) {
 // Search knowledge base using client-provided embedding
 sendEvent('status', { step: 'searching', message: 'Searching knowledge base...' });
 
-// Use provided embedding or check cache
+// Use provided embedding or generate server-side as fallback
 let queryEmbedding = providedEmbedding;
-if (!queryEmbedding && !isGuest && user) {
-  const cachedResult = await getCachedEmbedding(query);
-  if (cachedResult) {
-    queryEmbedding = cachedResult.embedding;
-  } else {
-    sendEvent('error', { error: 'Query embedding required' });
+
+// Only generate server-side if client didn't provide embedding (empty array or null)
+if (!queryEmbedding || queryEmbedding.length === 0) {
+  console.log(`[RAG Stream] No embedding provided, generating server-side...`);
+  sendEvent('status', { step: 'generating_embedding', message: 'Generating query embedding...' });
+  
+  try {
+    // Use external Hugging Face Inference API (intfloat/e5-small)
+    queryEmbedding = await generateQueryEmbedding(query);
+    console.log(`[RAG Stream] ✅ Generated ${queryEmbedding.length}-dim embedding server-side`);
+    
+    // Cache the newly generated embedding for future use
+    await cacheEmbedding(query, queryEmbedding);
+    console.log(`[RAG Stream] ✅ Cached new embedding`);
+  } catch (generateError) {
+    console.error(`[RAG Stream] Failed to generate embedding server-side:`, generateError);
+    sendEvent('error', { error: 'Failed to generate query embedding. Please try again.' });
     controller.close();
     return;
   }
+} else {
+  console.log(`[RAG Stream] Using client-provided embedding (${queryEmbedding.length}-dim)`);
 }
 
 // For authenticated users: search their knowledge base
@@ -344,7 +359,9 @@ sendEvent('sources', { chunks: searchResults, count: searchResults.length });
 ```
 
 **What happens**:
-- Uses client-provided embedding (or cached embedding as fallback)
+- Uses client-provided embedding (preferred) or generates server-side as fallback
+- Server-side generation uses external Hugging Face Inference API (intfloat/multilingual-e5-small)
+- E5 model automatically adds "query: " prefix for search queries
 - Uses pgvector to find similar document chunks
 - For authenticated users: Searches their personal + public documents
 - For guest users: Searches only public/system documents
