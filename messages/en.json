@@ -104,6 +104,7 @@
     "today": "Today",
     "previous7Days": "Previous 7 Days",
     "older": "Older",
+    "archived": "Archived",
     "userProfile": "User Profile",
     "freePlan": "Free Plan",
     "proPlan": "Pro Plan",
@@ -315,8 +316,21 @@
   },
   "header": {
     "archive": "Archive",
+    "unarchive": "Unarchive",
     "categories": "Categories",
-    "delete": "Delete"
+    "delete": "Delete",
+    "archiveConversation": "Archive this conversation?",
+    "archiveDescription": "Archived conversations will be moved to the archive section in the sidebar.",
+    "unarchiveConversation": "Unarchive this conversation?",
+    "unarchiveDescription": "This conversation will be moved back to your active conversations.",
+    "deleteConversation": "Delete this conversation?",
+    "deleteDescription": "This action cannot be undone. All messages in this conversation will be permanently deleted.",
+    "conversationArchived": "Conversation archived",
+    "conversationUnarchived": "Conversation unarchived",
+    "conversationDeleted": "Conversation deleted",
+    "noActiveConversation": "No active conversation",
+    "selectConversationFirst": "Please select a conversation first",
+    "noMessagesYet": "This conversation has no messages yet"
   },
   "errors": {
     "uploadFileFailed": "Failed to upload file",

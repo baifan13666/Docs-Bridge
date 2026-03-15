@@ -52,6 +52,8 @@ export default function Sidebar({
   const [showSignIn, setShowSignIn] = useState(false);
   const [initialTab, setInitialTab] = useState<'account' | 'plan' | 'usage' | 'notifications'>('account');
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
   const pathname = usePathname();
@@ -60,6 +62,7 @@ export default function Sidebar({
   useEffect(() => {
     if (isAuthenticated) {
       loadConversations();
+      loadArchivedConversations();
       loadFolders();
     }
   }, [isAuthenticated]);
@@ -74,6 +77,19 @@ export default function Sidebar({
       })));
     } catch (error) {
       console.error('Error loading conversations:', error);
+    }
+  }
+
+  async function loadArchivedConversations() {
+    try {
+      const { conversations: fetchedConvs } = await chatApi.fetchConversations(50, 0, true);
+      setArchivedConversations(fetchedConvs.map(c => ({
+        id: c.id,
+        title: c.title,
+        updated_at: c.updated_at
+      })));
+    } catch (error) {
+      console.error('Error loading archived conversations:', error);
     }
   }
 
@@ -152,6 +168,7 @@ export default function Sidebar({
     try {
       await chatApi.deleteConversation(convId);
       setConversations(conversations.filter(c => c.id !== convId));
+      setArchivedConversations(archivedConversations.filter(c => c.id !== convId));
       
       // If deleted current conversation, redirect to home
       if (convId === currentConversationId) {
@@ -159,6 +176,31 @@ export default function Sidebar({
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);
+    }
+  };
+
+  const handleUnarchiveConversation = async (convId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      const response = await fetch(`/api/chat/conversations/${convId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_archived: false })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to unarchive conversation');
+      }
+
+      // Move from archived to active conversations
+      const unarchived = archivedConversations.find(c => c.id === convId);
+      if (unarchived) {
+        setArchivedConversations(archivedConversations.filter(c => c.id !== convId));
+        setConversations([unarchived, ...conversations]);
+      }
+    } catch (error) {
+      console.error('Error unarchiving conversation:', error);
     }
   };
 
@@ -428,6 +470,64 @@ export default function Sidebar({
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Archived Conversations Section */}
+              {archivedConversations.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowArchived(!showArchived)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-(--color-sidebar-text-secondary) uppercase tracking-wider hover:text-(--color-sidebar-text) transition-colors cursor-pointer"
+                  >
+                    <span>{t('sidebar.archived')}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] bg-(--color-sidebar-active) px-1.5 py-0.5 rounded">
+                        {archivedConversations.length}
+                      </span>
+                      <span className="material-symbols-outlined text-[16px]">
+                        {showArchived ? 'expand_less' : 'expand_more'}
+                      </span>
+                    </div>
+                  </button>
+                  {showArchived && (
+                    <div className="space-y-0.5 mt-2">
+                      {archivedConversations.map((conv) => (
+                        <div
+                          key={conv.id}
+                          className={`group relative flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
+                            currentConversationId === conv.id
+                              ? 'bg-(--color-sidebar-active) text-(--color-sidebar-text) border border-(--color-sidebar-border)'
+                              : 'hover:bg-(--color-sidebar-hover) text-(--color-sidebar-text-secondary) hover:text-(--color-sidebar-text)'
+                          }`}
+                          onClick={() => router.push(`/?conversation=${conv.id}`)}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="material-symbols-outlined text-[16px] text-(--color-sidebar-text-secondary)">
+                              archive
+                            </span>
+                            <span className="truncate font-medium">{conv.title}</span>
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                            <button
+                              onClick={(e) => handleUnarchiveConversation(conv.id, e)}
+                              className="p-1 hover:bg-(--color-bg-primary) rounded transition-all"
+                              title={t('header.unarchive')}
+                            >
+                              <span className="material-symbols-outlined text-[16px] text-blue-500">unarchive</span>
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteConversation(conv.id, e)}
+                              className="p-1 hover:bg-(--color-bg-primary) rounded transition-all"
+                              title={t('common.delete')}
+                            >
+                              <span className="material-symbols-outlined text-[16px] text-red-500">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>
