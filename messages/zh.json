@@ -136,7 +136,9 @@
     "proFeature": "专业版",
     "confirmDeleteConversation": "确定要删除此对话吗？此操作无法撤消。",
     "signInRequired": "需要登录",
-    "signIn": "登录"
+    "signIn": "登录",
+    "collapse": "折叠侧边栏",
+    "expand": "展开侧边栏"
   },
   "settings": {
     "title": "设置",

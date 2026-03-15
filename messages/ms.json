@@ -137,7 +137,11 @@
     "proPlan": "Pelan Pro",
     "businessPlan": "Pelan Perniagaan",
     "proFeature": "PRO",
-    "confirmDeleteConversation": "Adakah anda pasti mahu memadam perbualan ini? Tindakan ini tidak boleh dibatalkan."
+    "confirmDeleteConversation": "Adakah anda pasti mahu memadam perbualan ini? Tindakan ini tidak boleh dibatalkan.",
+    "signInRequired": "Log Masuk Diperlukan",
+    "signIn": "Log Masuk",
+    "collapse": "Kecilkan bar sisi",
+    "expand": "Besarkan bar sisi"
   },
   "settings": {
     "title": "Tetapan",

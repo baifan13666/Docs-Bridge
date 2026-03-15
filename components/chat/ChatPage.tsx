@@ -25,6 +25,7 @@ export default function ChatPage({
   const t = useTranslations();
   const [modelMode, setModelMode] = useState<'standard' | 'mini'>('mini');
   const [showModelPopover, setShowModelPopover] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -61,6 +62,8 @@ export default function ChatPage({
         userAvatar={userAvatar}
         userPlan={userPlan}
         currentConversationId={conversationId}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
       <div className="flex-1 flex flex-col h-full relative bg-(--color-bg-primary)">

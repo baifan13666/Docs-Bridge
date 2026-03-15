@@ -58,8 +58,19 @@ export async function updateFolder(
     .single();
 
   if (!folder) throw new Error('Folder not found');
-  if (folder.is_system) throw new Error('Cannot modify system folder');
-  if (folder.user_id !== userId) throw new Error('Unauthorized');
+  
+  // For system folders, only allow is_active updates
+  if (folder.is_system) {
+    // Check if trying to update anything other than is_active
+    const hasOtherUpdates = updates.name !== undefined || updates.icon !== undefined;
+    if (hasOtherUpdates) {
+      throw new Error('Cannot modify system folder properties');
+    }
+    // Allow is_active update for system folders (no user_id check needed)
+  } else {
+    // For non-system folders, check user ownership
+    if (folder.user_id !== userId) throw new Error('Unauthorized');
+  }
 
   const { data, error } = await supabase
     .from('kb_folders')

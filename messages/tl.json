@@ -123,7 +123,11 @@
     "proPlan": "Pro Plan",
     "businessPlan": "Business Plan",
     "proFeature": "PRO",
-    "confirmDeleteConversation": "Sigurado ka bang gusto mong tanggalin ang pag-uusap na ito? Hindi na mababawi ang aksyong ito."
+    "confirmDeleteConversation": "Sigurado ka bang gusto mong tanggalin ang pag-uusap na ito? Hindi na mababawi ang aksyong ito.",
+    "signInRequired": "Kailangan ng Pag-sign In",
+    "signIn": "Mag-sign In",
+    "collapse": "Paliitin ang sidebar",
+    "expand": "Palawakin ang sidebar"
   },
   "settings": {
     "title": "Mga Setting",
