@@ -35,12 +35,14 @@ CREATE TABLE IF NOT EXISTS public.kb_documents (
   title TEXT NOT NULL DEFAULT 'Untitled',
   icon TEXT,
   content TEXT,
+  content_hash TEXT,
   document_type TEXT DEFAULT 'user_created',
   source_url TEXT,
   published_date TIMESTAMPTZ,
   language TEXT,
   raw_content TEXT,
   trust_level DECIMAL(3,2) DEFAULT 0.70,
+  last_crawled_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -228,6 +230,8 @@ CREATE INDEX IF NOT EXISTS idx_kb_folders_is_active ON public.kb_folders(is_acti
 CREATE INDEX IF NOT EXISTS idx_kb_documents_folder_id ON public.kb_documents(folder_id);
 CREATE INDEX IF NOT EXISTS idx_kb_documents_user_id ON public.kb_documents(user_id);
 CREATE INDEX IF NOT EXISTS idx_kb_documents_document_type ON public.kb_documents(document_type);
+CREATE INDEX IF NOT EXISTS idx_kb_documents_content_hash ON public.kb_documents(content_hash);
+CREATE INDEX IF NOT EXISTS idx_kb_documents_last_crawled_at ON public.kb_documents(last_crawled_at);
 
 -- KB Attachments Indexes
 CREATE INDEX IF NOT EXISTS idx_kb_attachments_document_id ON public.kb_attachments(document_id);
