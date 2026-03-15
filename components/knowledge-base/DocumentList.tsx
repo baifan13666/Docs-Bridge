@@ -59,11 +59,31 @@ export default function DocumentList({
       {documents.map((doc) => {
         const isEditing = editingId === doc.id;
         const canEdit = doc.documentType !== 'gov_crawled';
+        const isGovDoc = doc.documentType === 'gov_crawled';
+        
+        // Extract preview text from content
+        let previewText = '';
+        try {
+          const parsed = JSON.parse(doc.content || '{}');
+          if (parsed.blocks && Array.isArray(parsed.blocks)) {
+            // Get first text block content
+            const firstTextBlock = parsed.blocks.find((b: any) => 
+              b.type === 'text' || b.type === 'heading1' || b.type === 'heading2'
+            );
+            if (firstTextBlock) {
+              previewText = firstTextBlock.content?.substring(0, 60) || '';
+            }
+          } else {
+            previewText = doc.content?.substring(0, 60) || '';
+          }
+        } catch {
+          previewText = doc.content?.substring(0, 60) || '';
+        }
         
         return (
           <div
             key={doc.id}
-            className={`animate-fadeIn group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+            className={`animate-fadeIn group relative flex items-start gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
               isEditing ? 'bg-(--color-bg-tertiary)' :
               selectedDoc?.id === doc.id
                 ? 'bg-(--color-accent)/10 text-(--color-text-primary) border border-(--color-accent)/20 cursor-pointer'
@@ -71,7 +91,7 @@ export default function DocumentList({
             }`}
             onClick={() => !isEditing && onSelectDoc(doc)}
           >
-            <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+            <div className={`shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
               selectedDoc?.id === doc.id ? 'bg-(--color-accent)/20' : 'bg-(--color-bg-primary)'
             }`}>
               <span className={`material-symbols-outlined text-xl ${
@@ -110,10 +130,30 @@ export default function DocumentList({
             ) : (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{doc.title}</p>
-                  <p className="text-xs text-(--color-text-tertiary) truncate">
-                    {doc.lastEdited.toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-semibold truncate text-(--color-text-primary)">
+                      {doc.title}
+                    </p>
+                    {isGovDoc && (
+                      <span className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-500">
+                        <span className="material-symbols-outlined text-xs">lock</span>
+                        <span className="font-medium">Gov</span>
+                      </span>
+                    )}
+                  </div>
+                  
+                  {previewText && (
+                    <p className="text-xs text-(--color-text-tertiary) line-clamp-2 mb-1">
+                      {previewText}{previewText.length >= 60 ? '...' : ''}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-3 text-xs text-(--color-text-tertiary)">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">schedule</span>
+                      {doc.lastEdited.toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
                 
                 {canEdit && (

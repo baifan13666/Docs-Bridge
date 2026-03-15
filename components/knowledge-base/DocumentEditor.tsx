@@ -283,16 +283,29 @@ export default function DocumentEditor({ document, onUpdate }: DocumentEditorPro
             )}
           </div>
           
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            disabled={isReadOnly}
-            className={`flex-1 text-3xl font-bold bg-transparent border-none outline-none text-(--color-text-primary) placeholder:text-(--color-text-tertiary) ${
-              isReadOnly ? 'cursor-not-allowed opacity-80' : ''
-            }`}
-            placeholder={t('knowledgeBase.untitled')}
-          />
+          <div className="flex-1">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              disabled={isReadOnly}
+              className={`w-full text-3xl font-bold bg-transparent border-none outline-none text-(--color-text-primary) placeholder:text-(--color-text-tertiary) ${
+                isReadOnly ? 'cursor-not-allowed opacity-80' : ''
+              }`}
+              placeholder={t('knowledgeBase.untitled')}
+            />
+            
+            {/* Read-only badge for government documents */}
+            {isReadOnly && (
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <span className="material-symbols-outlined text-blue-500 text-sm">lock</span>
+                  <span className="text-xs font-medium text-blue-500">{t('knowledgeBase.governmentDocument')}</span>
+                </div>
+                <span className="text-xs text-(--color-text-tertiary)">{t('knowledgeBase.readOnly')}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Floating Toolbar */}
