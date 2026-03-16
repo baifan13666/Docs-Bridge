@@ -39,7 +39,8 @@ export function useStreamingRAG(options: UseStreamingRAGOptions = {}) {
     query: string,
     queryEmbedding: number[],
     modelMode: 'standard' | 'mini' = 'standard',
-    originalQuery?: string  // Original user input, if different from optimized query
+    originalQuery?: string,  // Original user input, if different from optimized query
+    queryLanguage?: string
   ) => {
     setIsStreaming(true);
     setStreamedContent('');
@@ -57,6 +58,7 @@ export function useStreamingRAG(options: UseStreamingRAGOptions = {}) {
           query_embedding: queryEmbedding,
           model_mode: modelMode,
           original_query: originalQuery,  // Pass original query for user message
+          query_language: queryLanguage,
         }),
       });
 

@@ -4,7 +4,7 @@
  * POST /api/chat/query-stream
  * 
  * Complete RAG pipeline with streaming LLM response:
- * 1. Semantic search with e5-small (384-dim)
+ * 1. Hybrid search (vector + BM25) with 384-dim query embedding
  * 2. Build context from retrieved chunks
  * 3. Stream LLM response with RAG context
  * 4. Save messages to database
@@ -35,6 +35,10 @@ interface SearchResult {
   document_type: string;
   chunk_index: number;
   trust_level?: number;
+  vector_score?: number;
+  bm25_score?: number;
+  hybrid_score?: number;
+  search_strategy?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -103,6 +107,7 @@ export async function POST(request: NextRequest) {
           active_folders = null,
           model_mode = 'standard',
           original_query, // Original user input (for display), if different from optimized query
+          query_language,
         } = body;
 
         console.log(`[RAG Stream] RequestID: ${requestId} - Received request for conversation: ${conversation_id}`);
@@ -161,14 +166,15 @@ export async function POST(request: NextRequest) {
 
         sendEvent('user_message', { message: userMessage });
 
-        // Step 2: Semantic search using provided embedding or generate server-side
+        // Step 2: Hybrid search using provided embedding or generate server-side
         // Note: Client should provide embedding after checking cache and generating locally
         sendEvent('status', { step: 'searching', message: 'Searching knowledge base...' });
         
         let searchResults = null;
+        let queryEmbedding: number[] | null = null;
         if (!isGuest && user) {
           // Use provided embedding, or generate server-side as last resort
-          let queryEmbedding = providedEmbedding;
+          queryEmbedding = providedEmbedding;
           
           // Only generate server-side if client didn't provide embedding (empty array or null)
           if (!queryEmbedding || queryEmbedding.length === 0) {
@@ -194,11 +200,11 @@ export async function POST(request: NextRequest) {
           }
 
           const { data: results, error: searchError } = await supabase
-            .rpc('search_chunks_small', {
+            .rpc('smart_hybrid_search', {
+              query_text: query,
               query_embedding: queryEmbedding,
-              match_threshold: 0.7,
               match_count: 10,
-              user_id_param: user.id,
+              p_user_id: user.id,
               active_folder_ids: active_folders
             });
 
@@ -211,16 +217,26 @@ export async function POST(request: NextRequest) {
         let retrievedChunks: SearchResult[] = [];
 
         if (searchResults && searchResults.length > 0) {
-          retrievedChunks = searchResults.map((result: any) => ({
-            chunk_id: result.id,
-            document_id: result.document_id,
-            chunk_text: result.chunk_text,
-            similarity: result.similarity,
-            title: result.title,
-            source_url: result.source_url,
-            document_type: result.document_type,
-            chunk_index: result.chunk_index
-          }));
+          retrievedChunks = searchResults.map((result: any) => {
+            const hybridScore = result.hybrid_score ?? result.vector_score ?? result.similarity ?? 0;
+            const similarity = Math.min(1, Math.max(0, hybridScore));
+
+            return {
+              chunk_id: result.chunk_id ?? result.id,
+              document_id: result.document_id,
+              chunk_text: result.chunk_text,
+              similarity,
+              title: result.title,
+              source_url: result.source_url,
+              document_type: result.document_type,
+              chunk_index: result.chunk_index,
+              trust_level: result.trust_level,
+              vector_score: result.vector_score,
+              bm25_score: result.bm25_score,
+              hybrid_score: result.hybrid_score,
+              search_strategy: result.search_strategy
+            };
+          });
 
           sendEvent('sources', { 
             chunks: retrievedChunks,
@@ -231,6 +247,26 @@ export async function POST(request: NextRequest) {
             step: 'no_results', 
             message: 'No relevant documents found' 
           });
+        }
+
+        // Step 2.1: Store query history (authenticated users only)
+        if (!isGuest && user && queryEmbedding) {
+          try {
+            await supabase
+              .from('query_history')
+              .insert({
+                user_id: user.id,
+                conversation_id,
+                query_text: original_query || query,
+                query_language: query_language || null,
+                embedding: queryEmbedding,
+                retrieved_chunks: retrievedChunks.length > 0
+                  ? retrievedChunks.map(chunk => chunk.chunk_id)
+                  : []
+              });
+          } catch (historyError) {
+            console.error('[RAG Stream] Failed to insert query history:', historyError);
+          }
         }
 
         // Step 3: Build context with structured memory

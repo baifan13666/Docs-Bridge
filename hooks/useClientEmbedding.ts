@@ -169,10 +169,10 @@ export function useClientEmbedding(): UseClientEmbeddingReturn {
     try {
       // Step 1: Check cache first
       console.log('[Client Embedding] Checking cache for query...');
-      const cacheResponse = await fetch('/api/embeddings/cache', {
+      const cacheResponse = await fetch('/api/embeddings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text }),
+        body: JSON.stringify({ text }),
       });
       
       if (cacheResponse.ok) {

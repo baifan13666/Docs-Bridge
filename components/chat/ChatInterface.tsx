@@ -226,7 +226,8 @@ export default function ChatInterface({
       queryText,
       embedding,
       modelMode,
-      originalQuery
+      originalQuery,
+      detectedLanguage?.language
     );
     console.log(`[ChatInterface] executeStreamingQuery completed - RequestID: ${requestId}`);
     

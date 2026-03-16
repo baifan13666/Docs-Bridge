@@ -13,7 +13,8 @@ export default function SignInModal({ onClose }: SignInModalProps) {
   const t = useTranslations();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -37,7 +38,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
   }, [resendCooldown]);
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
+    setGoogleLoading(true);
     setMessage('');
     
     const { error } = await supabase.auth.signInWithOAuth({
@@ -50,14 +51,14 @@ export default function SignInModal({ onClose }: SignInModalProps) {
 
     if (error) {
       setMessage(error.message);
-      setLoading(false);
+      setGoogleLoading(false);
     }
     // If successful, user will be redirected to Google OAuth
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setEmailLoading(true);
     setMessage('');
 
     // Send OTP - user will be automatically created if they don't exist
@@ -71,19 +72,19 @@ export default function SignInModal({ onClose }: SignInModalProps) {
 
     if (error) {
       setMessage(error.message);
-      setLoading(false);
+      setEmailLoading(false);
     } else {
       setOtpSent(true);
       setMessage(t('auth.checkEmail'));
       setResendCooldown(60); // 60 seconds cooldown
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return;
     
-    setLoading(true);
+    setEmailLoading(true);
     setMessage('');
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -95,17 +96,17 @@ export default function SignInModal({ onClose }: SignInModalProps) {
 
     if (error) {
       setMessage(error.message);
-      setLoading(false);
+      setEmailLoading(false);
     } else {
       setMessage(t('auth.codeResent'));
       setResendCooldown(60); // 60 seconds cooldown
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setEmailLoading(true);
     setMessage('');
 
     const { data, error } = await supabase.auth.verifyOtp({
@@ -116,7 +117,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
 
     if (error) {
       setMessage(error.message);
-      setLoading(false);
+      setEmailLoading(false);
     } else {
       // Successfully signed in
       setMessage(t('auth.successfullySignedIn'));
@@ -158,7 +159,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
             <div className="space-y-3">
               <button
                 onClick={handleGoogleSignIn}
-                disabled={loading}
+                disabled={googleLoading}
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] transition-all shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -190,15 +191,15 @@ export default function SignInModal({ onClose }: SignInModalProps) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
+                    disabled={emailLoading}
                   />
                 </div>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={emailLoading}
                   className="w-full bg-[#1E3A8A] text-white font-medium py-2.5 px-4 rounded-lg hover:bg-blue-800 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? t('auth.sending') : t('auth.sendLoginCode')}
+                  {emailLoading ? t('auth.sending') : t('auth.sendLoginCode')}
                 </button>
               </form>
             </div>
@@ -219,7 +220,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
                   pattern="[0-9]{8}"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  disabled={loading}
+                  disabled={emailLoading}
                   autoFocus
                 />
                 <p className="text-xs text-gray-600 mt-2">
@@ -228,17 +229,17 @@ export default function SignInModal({ onClose }: SignInModalProps) {
               </div>
               <button
                 type="submit"
-                disabled={loading || otp.length !== 8}
+                disabled={emailLoading || otp.length !== 8}
                 className="w-full bg-[#1E3A8A] text-white font-medium py-2.5 px-4 rounded-lg hover:bg-blue-800 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] disabled:opacity-50 cursor-pointer"
               >
-                {loading ? t('auth.verifying') : t('auth.verifyCode')}
+                {emailLoading ? t('auth.verifying') : t('auth.verifyCode')}
               </button>
               
               {/* Resend Code Button */}
               <button
                 type="button"
                 onClick={handleResendOtp}
-                disabled={resendCooldown > 0 || loading}
+                disabled={resendCooldown > 0 || emailLoading}
                 className="w-full text-sm text-[#1E3A8A] hover:text-blue-800 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {resendCooldown > 0 
