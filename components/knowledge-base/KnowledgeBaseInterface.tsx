@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import PerfectScrollbarWrapper from '../ui/PerfectScrollbar';
-import DocumentEditor from './DocumentEditor';
+import EnhancedDocumentEditor from './EnhancedDocumentEditor';
 import DocumentList from './DocumentList';
 import FolderList from './FolderList';
+import TemplateSelector from './TemplateSelector';
 import type { Document, Folder } from './types';
+import type { DocumentTemplate } from '@/lib/kb/templates';
 import * as kbApi from '@/lib/api/kb';
 import { toast } from 'sonner';
 
@@ -28,6 +30,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
   const [loadingFolders, setLoadingFolders] = useState(true);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   // Load folders from API on mount
   useEffect(() => {
@@ -136,15 +139,25 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
     }
   };
 
-  const handleCreateDocument = async () => {
+  const handleCreateDocument = async (template?: DocumentTemplate) => {
     if (!selectedFolder) return;
     
     try {
+      let content = '';
+      let title = t('knowledgeBase.untitled');
+      let icon = 'description';
+      
+      if (template) {
+        content = JSON.stringify({ blocks: template.blocks, version: 2 });
+        title = template.name;
+        icon = template.icon;
+      }
+      
       const newDoc = await kbApi.createDocument(
         selectedFolder.id,
-        t('knowledgeBase.untitled'),
-        'description',
-        ''
+        title,
+        icon,
+        content
       );
       
       const convertedDoc: Document = {
@@ -334,6 +347,12 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
 
   return (
     <>
+      <TemplateSelector
+        isOpen={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        onSelect={(template) => handleCreateDocument(template)}
+      />
+      
       {/* Document List Sidebar */}
       <div 
         className={`bg-(--color-bg-secondary) border-r border-(--color-border) flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
@@ -402,21 +421,52 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
           {/* Documents in Selected Folder */}
           {selectedFolder && (
             <>
-              <div className="p-3 border-b border-(--color-border)">
-                <button
-                  onClick={handleCreateDocument}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-(--color-accent) text-white rounded-lg hover:bg-(--color-accent-hover) transition-all duration-200 font-medium cursor-pointer shadow-sm hover:shadow-md text-sm"
-                >
-                  <span className="material-symbols-outlined text-xl">add</span>
-                  <span>{t('knowledgeBase.newDocument')}</span>
-                </button>
-              </div>
+              {/* Only show create buttons for non-system folders */}
+              {!selectedFolder.isSystem && (
+                <div className="p-3 border-b border-(--color-border) space-y-2">
+                  <button
+                    onClick={() => handleCreateDocument()}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-(--color-accent) text-white rounded-lg hover:bg-(--color-accent-hover) transition-all duration-200 font-medium cursor-pointer shadow-sm hover:shadow-md text-sm"
+                  >
+                    <span className="material-symbols-outlined text-xl">add</span>
+                    <span>{t('knowledgeBase.newDocument')}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowTemplateSelector(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-(--color-bg-tertiary) text-(--color-text-primary) rounded-lg hover:bg-(--color-bg-tertiary)/80 transition-all duration-200 font-medium cursor-pointer text-sm border border-(--color-border)"
+                  >
+                    <span className="material-symbols-outlined text-xl">description</span>
+                    <span>{t('knowledgeBase.fromTemplate')}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* System folder notice */}
+              {selectedFolder.isSystem && (
+                <div className="p-3 border-b border-(--color-border)">
+                  <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <span className="material-symbols-outlined text-blue-500 text-lg shrink-0">lock</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-blue-500 mb-1">{t('knowledgeBase.systemFolder')}</p>
+                      <p className="text-xs text-(--color-text-secondary)">{t('knowledgeBase.systemFolderDescription')}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <PerfectScrollbarWrapper className="flex-1 px-3">
                 <div className="py-2">
-                  <h3 className="text-xs font-semibold text-(--color-text-secondary) uppercase tracking-wider mb-2 px-3">
-                    {selectedFolder.name}
-                  </h3>
+                  <div className="flex items-center justify-between mb-2 px-3">
+                    <h3 className="text-xs font-semibold text-(--color-text-secondary) uppercase tracking-wider">
+                      {selectedFolder.name}
+                    </h3>
+                    {selectedFolder.isSystem && (
+                      <span className="flex items-center gap-1 text-xs text-blue-500">
+                        <span className="material-symbols-outlined text-sm">lock</span>
+                        <span>{t('knowledgeBase.readOnly')}</span>
+                      </span>
+                    )}
+                  </div>
                   <DocumentList
                     documents={currentFolderDocs}
                     selectedDoc={selectedDoc}
@@ -470,7 +520,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
 
         {/* Editor */}
         {selectedDoc ? (
-          <DocumentEditor
+          <EnhancedDocumentEditor
             document={selectedDoc}
             onUpdate={(updates: Partial<Document>) => handleUpdateDocument(selectedDoc.id, updates)}
           />

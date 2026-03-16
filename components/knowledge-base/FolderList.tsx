@@ -58,11 +58,12 @@ export default function FolderList({
       {folders.map((folder) => {
         const isEditing = editingId === folder.id;
         const canEdit = !folder.isSystem;
+        const isSystem = folder.isSystem;
         
         return (
           <div
             key={folder.id}
-            className={`animate-fadeIn group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+            className={`animate-fadeIn group relative flex items-start gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
               isEditing ? 'bg-(--color-bg-tertiary)' :
               selectedFolder?.id === folder.id
                 ? 'bg-(--color-accent)/10 text-(--color-text-primary) border border-(--color-accent)/20 cursor-pointer'
@@ -70,7 +71,7 @@ export default function FolderList({
             }`}
             onClick={() => !isEditing && onSelectFolder(folder)}
           >
-            <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+            <div className={`shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
               selectedFolder?.id === folder.id ? 'bg-(--color-accent)/20' : 'bg-(--color-bg-primary)'
             }`}>
               <span className={`material-symbols-outlined text-xl ${
@@ -109,8 +110,18 @@ export default function FolderList({
             ) : (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{folder.name}</p>
-                  <p className="text-xs text-(--color-text-tertiary) truncate">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-semibold truncate text-(--color-text-primary)">
+                      {folder.name}
+                    </p>
+                    {isSystem && (
+                      <span className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-500">
+                        <span className="material-symbols-outlined text-xs">lock</span>
+                        <span className="font-medium">System</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-(--color-text-tertiary)">
                     {folder.createdAt.toLocaleDateString()}
                   </p>
                 </div>

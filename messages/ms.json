@@ -132,12 +132,17 @@
     "today": "Hari Ini",
     "previous7Days": "7 Hari Lepas",
     "older": "Lebih Lama",
+    "archived": "Diarkibkan",
     "userProfile": "Profil Pengguna",
     "freePlan": "Pelan Percuma",
     "proPlan": "Pelan Pro",
     "businessPlan": "Pelan Perniagaan",
     "proFeature": "PRO",
-    "confirmDeleteConversation": "Adakah anda pasti mahu memadam perbualan ini? Tindakan ini tidak boleh dibatalkan."
+    "confirmDeleteConversation": "Adakah anda pasti mahu memadam perbualan ini? Tindakan ini tidak boleh dibatalkan.",
+    "signInRequired": "Log Masuk Diperlukan",
+    "signIn": "Log Masuk",
+    "collapse": "Kecilkan bar sisi",
+    "expand": "Besarkan bar sisi"
   },
   "settings": {
     "title": "Tetapan",
@@ -249,8 +254,21 @@
   },
   "header": {
     "archive": "Arkib",
+    "unarchive": "Nyaharkib",
     "categories": "Kategori",
-    "delete": "Padam"
+    "delete": "Padam",
+    "archiveConversation": "Arkibkan perbualan ini?",
+    "archiveDescription": "Perbualan yang diarkibkan akan dipindahkan ke bahagian arkib dalam bar sisi.",
+    "unarchiveConversation": "Nyaharkibkan perbualan ini?",
+    "unarchiveDescription": "Perbualan ini akan dipindahkan kembali ke perbualan aktif anda.",
+    "deleteConversation": "Padam perbualan ini?",
+    "deleteDescription": "Tindakan ini tidak boleh dibatalkan. Semua mesej dalam perbualan ini akan dipadam secara kekal.",
+    "conversationArchived": "Perbualan diarkibkan",
+    "conversationUnarchived": "Perbualan dinyaharkibkan",
+    "conversationDeleted": "Perbualan dipadam",
+    "noActiveConversation": "Tiada perbualan aktif",
+    "selectConversationFirst": "Sila pilih perbualan dahulu",
+    "noMessagesYet": "Perbualan ini belum mempunyai mesej"
   },
   "errors": {
     "uploadFileFailed": "Gagal muat naik fail",

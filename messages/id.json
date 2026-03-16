@@ -129,7 +129,11 @@
     "proPlan": "Paket Pro",
     "businessPlan": "Paket Bisnis",
     "proFeature": "PRO",
-    "confirmDeleteConversation": "Apakah Anda yakin ingin menghapus percakapan ini? Tindakan ini tidak dapat dibatalkan."
+    "confirmDeleteConversation": "Apakah Anda yakin ingin menghapus percakapan ini? Tindakan ini tidak dapat dibatalkan.",
+    "signInRequired": "Masuk Diperlukan",
+    "signIn": "Masuk",
+    "collapse": "Ciutkan sidebar",
+    "expand": "Perluas sidebar"
   },
   "settings": {
     "title": "Pengaturan",
