@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS public.kb_documents (
   raw_content TEXT,
   trust_level DECIMAL(3,2) DEFAULT 0.70,
   last_crawled_at TIMESTAMPTZ,
+  metadata JSONB DEFAULT '{}',
+  document_chunks UUID[] DEFAULT '{}',
+  embeddings_updated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -101,6 +104,7 @@ CREATE TABLE IF NOT EXISTS public.document_chunks (
   document_id UUID NOT NULL REFERENCES public.kb_documents(id) ON DELETE CASCADE,
   chunk_text TEXT NOT NULL,
   chunk_index INT NOT NULL,
+  chunk_hash TEXT,
   embedding_small vector(384),
   embedding_large vector(1024),
   token_count INT,
@@ -110,6 +114,7 @@ CREATE TABLE IF NOT EXISTS public.document_chunks (
   section_level INTEGER,
   is_section_chunk BOOLEAN DEFAULT false,
   last_rerank_score NUMERIC,
+  metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(document_id, chunk_index)
@@ -232,6 +237,9 @@ CREATE INDEX IF NOT EXISTS idx_kb_documents_user_id ON public.kb_documents(user_
 CREATE INDEX IF NOT EXISTS idx_kb_documents_document_type ON public.kb_documents(document_type);
 CREATE INDEX IF NOT EXISTS idx_kb_documents_content_hash ON public.kb_documents(content_hash);
 CREATE INDEX IF NOT EXISTS idx_kb_documents_last_crawled_at ON public.kb_documents(last_crawled_at);
+CREATE INDEX IF NOT EXISTS idx_kb_documents_source_url ON public.kb_documents(source_url) WHERE source_url IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_kb_documents_document_chunks ON public.kb_documents USING GIN (document_chunks);
+CREATE INDEX IF NOT EXISTS idx_kb_documents_embeddings_updated_at ON public.kb_documents(embeddings_updated_at);
 
 -- KB Attachments Indexes
 CREATE INDEX IF NOT EXISTS idx_kb_attachments_document_id ON public.kb_attachments(document_id);
@@ -304,22 +312,6 @@ CREATE INDEX IF NOT EXISTS idx_crawler_metrics_status ON public.crawler_metrics(
 -- ============================================================================
 -- SECTION 3: ROW LEVEL SECURITY (RLS)
 -- ============================================================================
-
--- Enable RLS on all tables
-ALTER TABLE public.kb_folders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.kb_documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.kb_attachments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.chat_conversations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_plans ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.document_chunks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.query_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.query_embeddings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.query_templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.crawler_sources ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.crawler_pages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.document_structured_data ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.crawler_metrics ENABLE ROW LEVEL SECURITY;
 
 -- KB Folders Policies
 CREATE POLICY "Users can view their own folders"
@@ -889,6 +881,8 @@ COMMENT ON TABLE public.document_structured_data IS 'Structured data extracted f
 COMMENT ON TABLE public.crawler_metrics IS 'Crawler performance metrics';
 
 COMMENT ON COLUMN public.kb_documents.trust_level IS 'Trust level for confidence scoring: 1.0 for government docs, 0.7 for user docs';
+COMMENT ON COLUMN public.kb_documents.document_chunks IS 'Array of document_chunk IDs associated with this document for embedding tracking';
+COMMENT ON COLUMN public.kb_documents.embeddings_updated_at IS 'Timestamp when document embeddings were last updated';
 COMMENT ON COLUMN public.query_history.embedding IS '384-dimensional embedding vector from multilingual-e5-small (browser)';
 
 COMMENT ON INDEX public.idx_document_chunks_embedding_small_hnsw IS 'HNSW index for fast 384-dim vector search (e5-small). m=16 connections per layer, ef_construction=64 for quality.';
