@@ -538,7 +538,7 @@ export default function KnowledgeBaseInterface({ userEmail, userName, initialDoc
               </p>
               {selectedFolder && (
                 <button
-                  onClick={handleCreateDocument}
+                  onClick={() => handleCreateDocument()}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-(--color-accent) text-white rounded-lg hover:bg-(--color-accent-hover) transition-all duration-200 cursor-pointer font-medium shadow-sm hover:shadow-md"
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
