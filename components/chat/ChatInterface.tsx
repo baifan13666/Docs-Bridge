@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import SignInModal from '../auth/SignInModal';
 import PipelineProgress from './PipelineProgress';
@@ -41,6 +41,7 @@ export default function ChatInterface({
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId);
   const [sending, setSending] = useState(false);
   const [modelMode, setModelMode] = useState<'standard' | 'mini'>(externalModelMode || 'mini');
+  const rerankStartedRef = useRef(false);
   
   // Custom hooks
   const { guestQueryUsed, setGuestQueryUsed, migrateGuestConversation } = useGuestMode(isAuthenticated);
@@ -74,6 +75,7 @@ export default function ChatInterface({
       if (status.step === 'searching') {
         pipeline.updateStep(4, 'active');
       } else if (status.step === 'reranking') {
+        rerankStartedRef.current = true;
         pipeline.updateStep(5, 'active');
       } else if (status.step === 'building_context') {
         pipeline.updateStep(6, 'active');
@@ -84,7 +86,9 @@ export default function ChatInterface({
     onSources: (sources) => {
       console.log('[ChatInterface] Streaming sources:', sources.length);
       pipeline.updateStep(4, 'completed', `${sources.length} candidates`);
-      pipeline.updateStep(5, 'completed', `${sources.length} docs found`);
+      if (rerankStartedRef.current) {
+        pipeline.updateStep(5, 'completed', `${sources.length} docs found`);
+      }
     },
     onConfidence: (confidence) => {
       console.log('[ChatInterface] Streaming confidence:', confidence);
@@ -285,6 +289,7 @@ export default function ChatInterface({
     console.log(`[ChatInterface] ${sendMessageId} - Processing message: "${userMessageContent.substring(0, 50)}..."`);
     
     // Reset and show pipeline
+    rerankStartedRef.current = false;
     pipeline.resetSteps();
     pipeline.showPipelineUI();
 

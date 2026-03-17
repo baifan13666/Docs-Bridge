@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getDocument, updateDocument, deleteDocument } from '@/lib/supabase/queries/kb';
 
+async function triggerCrawlerEmbeddingCheck(documentId: string) {
+  const baseUrl = process.env.DOCS_BRIDGE_CRAWLER_BASE_URL;
+  const secret = process.env.DOCS_BRIDGE_CRAWLER_CRON_SECRET;
+
+  if (!baseUrl || !secret) {
+    console.warn('[KB] Crawler trigger skipped: missing DOCS_BRIDGE_CRAWLER_BASE_URL or DOCS_BRIDGE_CRAWLER_CRON_SECRET');
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const url = `${baseUrl.replace(/\/$/, '')}/api/cron/check-embeddings?source=kb&document_id=${encodeURIComponent(documentId)}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${secret}`,
+      },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn('[KB] Crawler trigger failed:', response.status, errorText);
+    }
+  } catch (error) {
+    console.warn('[KB] Crawler trigger error:', error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // GET /api/kb/documents/[id] - Get single document
 export async function GET(
   request: NextRequest,
@@ -83,6 +116,10 @@ export async function PATCH(
     }
 
     const document = await updateDocument(user.id, id, updates);
+
+    if (updates.content !== undefined || updates.title !== undefined) {
+      void triggerCrawlerEmbeddingCheck(id);
+    }
 
     return NextResponse.json({
       success: true,

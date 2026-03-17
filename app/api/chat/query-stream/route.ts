@@ -39,6 +39,29 @@ interface SearchResult {
   bm25_score?: number;
   hybrid_score?: number;
   search_strategy?: string;
+  rerank_score?: number;
+}
+
+function clampScore(score: number): number {
+  if (Number.isNaN(score)) return 0;
+  return Math.min(1, Math.max(0, score));
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (!a.length || !b.length || a.length !== b.length) return 0;
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    const av = a[i];
+    const bv = b[i];
+    dot += av * bv;
+    normA += av * av;
+    normB += bv * bv;
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  if (!denom) return 0;
+  return dot / denom;
 }
 
 export async function POST(request: NextRequest) {
@@ -237,15 +260,83 @@ export async function POST(request: NextRequest) {
               search_strategy: result.search_strategy
             };
           });
-
-          sendEvent('sources', { 
-            chunks: retrievedChunks,
-            count: retrievedChunks.length 
-          });
         } else {
           sendEvent('status', { 
             step: 'no_results', 
             message: 'No relevant documents found' 
+          });
+        }
+
+        // Step 2.2: Rerank with 1024-dim embeddings in PLUS mode
+        if (model_mode === 'standard' && retrievedChunks.length > 0) {
+          sendEvent('status', { step: 'reranking', message: 'Reranking results...' });
+          try {
+            const queryEmbeddingLarge = await generateQueryEmbedding(query, 'query', 'bge-m3');
+            const chunkIds = retrievedChunks.map(chunk => chunk.chunk_id);
+
+            const { data: chunkEmbeddings, error: chunkEmbeddingsError } = await supabase
+              .from('document_chunks')
+              .select('id, embedding_large')
+              .in('id', chunkIds);
+
+            if (chunkEmbeddingsError) {
+              throw chunkEmbeddingsError;
+            }
+
+            const embeddingMap = new Map<string, number[]>();
+            (chunkEmbeddings || []).forEach((row: any) => {
+              if (Array.isArray(row.embedding_large)) {
+                embeddingMap.set(row.id, row.embedding_large as number[]);
+              }
+            });
+
+            const coverageRatio = embeddingMap.size / retrievedChunks.length;
+            const rerankCoverageThreshold = 0.7;
+            if (coverageRatio < rerankCoverageThreshold) {
+              console.warn(
+                `[RAG Stream] RequestID: ${requestId} - Rerank skipped (coverage ${(coverageRatio * 100).toFixed(0)}% < ${Math.round(rerankCoverageThreshold * 100)}%)`
+              );
+            } else {
+              const rerankScores = new Map<string, number>();
+              retrievedChunks.forEach(chunk => {
+                const embeddingLarge = embeddingMap.get(chunk.chunk_id);
+                if (!embeddingLarge) return;
+                const score = cosineSimilarity(queryEmbeddingLarge, embeddingLarge);
+                rerankScores.set(chunk.chunk_id, score);
+              });
+
+              if (rerankScores.size > 0) {
+                retrievedChunks = retrievedChunks.map(chunk => {
+                  const score = rerankScores.get(chunk.chunk_id);
+                  if (score === undefined) return chunk;
+                  return {
+                    ...chunk,
+                    similarity: clampScore(score),
+                    rerank_score: score,
+                  };
+                });
+
+                retrievedChunks.sort((a, b) => {
+                  const aScore = a.rerank_score;
+                  const bScore = b.rerank_score;
+                  if (aScore === undefined && bScore === undefined) return 0;
+                  if (aScore === undefined) return 1;
+                  if (bScore === undefined) return -1;
+                  return bScore - aScore;
+                });
+              } else {
+                console.warn(`[RAG Stream] RequestID: ${requestId} - No rerank scores computed; using coarse order`);
+              }
+            }
+          } catch (rerankError) {
+            console.warn(`[RAG Stream] RequestID: ${requestId} - Rerank failed, using coarse results:`, rerankError);
+          }
+        }
+
+        if (retrievedChunks.length > 0) {
+          sendEvent('sources', { 
+            chunks: retrievedChunks,
+            count: retrievedChunks.length 
           });
         }
 
