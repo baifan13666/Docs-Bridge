@@ -198,6 +198,9 @@ export async function POST(request: NextRequest) {
         if (!isGuest && user) {
           // Use provided embedding, or generate server-side as last resort
           queryEmbedding = providedEmbedding;
+          if (queryEmbedding && queryEmbedding.length > 0) {
+            console.log(`[RAG Stream] RequestID: ${requestId} - Client embedding provided (${queryEmbedding.length}-dim)`);
+          }
           
           // Only generate server-side if client didn't provide embedding (empty array or null)
           if (!queryEmbedding || queryEmbedding.length === 0) {
@@ -240,6 +243,7 @@ export async function POST(request: NextRequest) {
         let retrievedChunks: SearchResult[] = [];
 
         if (searchResults && searchResults.length > 0) {
+          console.log(`[RAG Stream] RequestID: ${requestId} - Raw search results: ${searchResults.length}`);
           retrievedChunks = searchResults.map((result: any) => {
             const hybridScore = result.hybrid_score ?? result.vector_score ?? result.similarity ?? 0;
             const similarity = Math.min(1, Math.max(0, hybridScore));
@@ -260,6 +264,15 @@ export async function POST(request: NextRequest) {
               search_strategy: result.search_strategy
             };
           });
+
+          console.log(`[RAG Stream] RequestID: ${requestId} - Coarse results (top 10):`);
+          retrievedChunks.slice(0, 10).forEach((chunk, index) => {
+            console.log(
+              `[RAG Stream] RequestID: ${requestId} - #${index + 1} chunk=${chunk.chunk_id} doc=${chunk.document_id} ` +
+              `sim=${chunk.similarity.toFixed(4)} vec=${chunk.vector_score ?? 'n/a'} bm25=${chunk.bm25_score ?? 'n/a'} ` +
+              `hybrid=${chunk.hybrid_score ?? 'n/a'} title="${chunk.title}"`
+            );
+          });
         } else {
           sendEvent('status', { 
             step: 'no_results', 
@@ -272,6 +285,7 @@ export async function POST(request: NextRequest) {
           sendEvent('status', { step: 'reranking', message: 'Reranking results...' });
           try {
             const queryEmbeddingLarge = await generateQueryEmbedding(query, 'query', 'bge-m3');
+            console.log(`[RAG Stream] RequestID: ${requestId} - Rerank query embedding generated (${queryEmbeddingLarge.length}-dim)`);
             const chunkIds = retrievedChunks.map(chunk => chunk.chunk_id);
 
             const { data: chunkEmbeddings, error: chunkEmbeddingsError } = await supabase
@@ -292,6 +306,10 @@ export async function POST(request: NextRequest) {
 
             const coverageRatio = embeddingMap.size / retrievedChunks.length;
             const rerankCoverageThreshold = 0.7;
+            console.log(
+              `[RAG Stream] RequestID: ${requestId} - Rerank coverage ${embeddingMap.size}/${retrievedChunks.length} ` +
+              `(${(coverageRatio * 100).toFixed(0)}%), threshold=${Math.round(rerankCoverageThreshold * 100)}%`
+            );
             if (coverageRatio < rerankCoverageThreshold) {
               console.warn(
                 `[RAG Stream] RequestID: ${requestId} - Rerank skipped (coverage ${(coverageRatio * 100).toFixed(0)}% < ${Math.round(rerankCoverageThreshold * 100)}%)`
@@ -323,6 +341,16 @@ export async function POST(request: NextRequest) {
                   if (aScore === undefined) return 1;
                   if (bScore === undefined) return -1;
                   return bScore - aScore;
+                });
+
+                console.log(`[RAG Stream] RequestID: ${requestId} - Reranked results (top 10):`);
+                retrievedChunks.slice(0, 10).forEach((chunk, index) => {
+                  const rerankScore = chunk.rerank_score ?? null;
+                  console.log(
+                    `[RAG Stream] RequestID: ${requestId} - #${index + 1} chunk=${chunk.chunk_id} doc=${chunk.document_id} ` +
+                    `rerank=${rerankScore !== null ? rerankScore.toFixed(4) : 'n/a'} ` +
+                    `title="${chunk.title}"`
+                  );
                 });
               } else {
                 console.warn(`[RAG Stream] RequestID: ${requestId} - No rerank scores computed; using coarse order`);
