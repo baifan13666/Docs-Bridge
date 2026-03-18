@@ -4,17 +4,6 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const isLocalhost = requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1';
-
-  if (siteUrl && isLocalhost) {
-    const redirectUrl = new URL('/auth/callback', siteUrl);
-    requestUrl.searchParams.forEach((value, key) => {
-      redirectUrl.searchParams.set(key, value);
-    });
-    return NextResponse.redirect(redirectUrl);
-  }
-
   const origin = requestUrl.origin;
 
   if (code) {
