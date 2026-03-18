@@ -34,6 +34,30 @@ export interface QueryTemplate {
   priority: number;
 }
 
+function normalizeEmbedding(raw: unknown): number[] | null {
+  if (!raw) return null;
+  if (Array.isArray(raw)) {
+    const arr = raw.map((v) => Number(v)).filter((v) => Number.isFinite(v));
+    return arr.length > 0 ? arr : null;
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        const arr = parsed.map((v) => Number(v)).filter((v) => Number.isFinite(v));
+        return arr.length > 0 ? arr : null;
+      }
+    } catch {
+      // fall through to manual parse
+    }
+    const normalized = trimmed.replace(/^\[/, '').replace(/\]$/, '');
+    const parts = normalized.split(',').map((p) => Number(p.trim())).filter((v) => Number.isFinite(v));
+    return parts.length > 0 ? parts : null;
+  }
+  return null;
+}
+
 /**
  * Normalize query text for consistent hashing and matching
  */
@@ -113,6 +137,11 @@ export async function getCachedEmbedding(
       .single();
 
     if (!cacheError && cachedResult) {
+      const normalizedEmbedding = normalizeEmbedding(cachedResult.embedding);
+      if (!normalizedEmbedding) {
+        console.warn('[Embedding Cache] Cache hit but embedding failed to parse, skipping cache result');
+        return null;
+      }
       // Update hit count
       await supabase
         .from('query_embeddings')
@@ -125,7 +154,7 @@ export async function getCachedEmbedding(
       console.log(`[Embedding Cache] ✅ Exact cache hit! (${cachedResult.hit_count + 1} total hits)`);
       
       return {
-        embedding: cachedResult.embedding,
+        embedding: normalizedEmbedding,
         language: cachedResult.language,
         dialect: cachedResult.dialect,
         isFromCache: true,

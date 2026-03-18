@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -69,11 +70,11 @@ export default function VoiceInput({ onTranscript, disabled = false, language = 
           // Handle specific errors
           if (event.error === 'no-speech') {
             console.log('[VoiceInput] No speech detected');
-            alert(t('errors.noSpeechDetected'));
+            toast.error(t('errors.noSpeechDetected'));
           } else if (event.error === 'not-allowed') {
-            alert(t('errors.microphoneAccessDenied'));
+            toast.error(t('errors.microphoneAccessDenied'));
           } else if (event.error === 'network') {
-            alert(t('errors.networkError'));
+            toast.error(t('errors.networkError'));
           }
         };
 

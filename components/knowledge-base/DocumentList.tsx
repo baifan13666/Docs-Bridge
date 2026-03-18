@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Document } from './types';
 import { DocumentSkeleton } from '../ui/Skeleton';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 interface DocumentListProps {
   documents: Document[];
@@ -25,6 +26,8 @@ export default function DocumentList({
   const t = useTranslations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [pendingDeleteDoc, setPendingDeleteDoc] = useState<Document | null>(null);
   
   if (loading) {
     return (
@@ -52,6 +55,19 @@ export default function DocumentList({
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditTitle('');
+  };
+  
+  const handleRequestDelete = (doc: Document, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPendingDeleteDoc(doc);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteDoc = () => {
+    if (!pendingDeleteDoc) return;
+    onDeleteDoc(pendingDeleteDoc.id);
+    setShowDeleteDialog(false);
+    setPendingDeleteDoc(null);
   };
   
   return (
@@ -166,12 +182,7 @@ export default function DocumentList({
                       <span className="material-symbols-outlined text-base text-(--color-text-secondary)">edit</span>
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(t('knowledgeBase.deleteDocument'))) {
-                          onDeleteDoc(doc.id);
-                        }
-                      }}
+                      onClick={(e) => handleRequestDelete(doc, e)}
                       className="p-1.5 hover:bg-(--color-bg-primary) rounded-md transition-all duration-200 cursor-pointer"
                       title={t('common.delete')}
                     >
@@ -184,6 +195,19 @@ export default function DocumentList({
           </div>
         );
       })}
+
+      <ConfirmDialog
+        show={showDeleteDialog}
+        title={t('common.delete')}
+        description={t('knowledgeBase.deleteDocument')}
+        confirmText={t('common.delete')}
+        confirmVariant="danger"
+        onConfirm={confirmDeleteDoc}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setPendingDeleteDoc(null);
+        }}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import UserSettingsModal from '../settings/UserSettingsModal';
 import SignInModal from '../auth/SignInModal';
 import PerfectScrollbarWrapper from '../ui/PerfectScrollbar';
+import ConfirmDialog from '../ui/ConfirmDialog';
 import * as chatApi from '@/lib/api/chat';
 
 interface Folder {
@@ -56,6 +57,8 @@ export default function Sidebar({
   const [showArchived, setShowArchived] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const pathname = usePathname();
   
   const getChatBasePath = () => {
@@ -168,11 +171,18 @@ export default function Sidebar({
     }
   };
 
-  const handleDeleteConversation = async (convId: string, e: React.MouseEvent) => {
+  const handleDeleteConversation = (convId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    if (!confirm(t('sidebar.confirmDeleteConversation'))) return;
-    
+    setPendingDeleteId(convId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!pendingDeleteId) return;
+    const convId = pendingDeleteId;
+    setShowDeleteDialog(false);
+    setPendingDeleteId(null);
+
     try {
       await chatApi.deleteConversation(convId);
       setConversations(conversations.filter(c => c.id !== convId));
@@ -644,6 +654,19 @@ export default function Sidebar({
           onClose={() => setShowSignIn(false)}
         />
       )}
+
+      <ConfirmDialog
+        show={showDeleteDialog}
+        title={t('header.deleteConversation')}
+        description={t('sidebar.confirmDeleteConversation')}
+        confirmText={t('common.delete')}
+        confirmVariant="danger"
+        onConfirm={confirmDeleteConversation}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setPendingDeleteId(null);
+        }}
+      />
     </>
   );
 }

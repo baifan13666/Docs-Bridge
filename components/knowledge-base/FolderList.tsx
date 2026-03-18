@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Folder } from './types';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 import { FolderSkeleton } from '../ui/Skeleton';
 
@@ -24,6 +25,8 @@ export default function FolderList({
   const t = useTranslations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [pendingDeleteFolder, setPendingDeleteFolder] = useState<Folder | null>(null);
   
   if (loading) {
     return (
@@ -51,6 +54,19 @@ export default function FolderList({
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditName('');
+  };
+  
+  const handleRequestDelete = (folder: Folder, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPendingDeleteFolder(folder);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteFolder = () => {
+    if (!pendingDeleteFolder) return;
+    onDeleteFolder(pendingDeleteFolder.id);
+    setShowDeleteDialog(false);
+    setPendingDeleteFolder(null);
   };
   
   return (
@@ -136,12 +152,7 @@ export default function FolderList({
                       <span className="material-symbols-outlined text-base text-(--color-text-secondary)">edit</span>
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(t('knowledgeBase.deleteFolder', { name: folder.name }))) {
-                          onDeleteFolder(folder.id);
-                        }
-                      }}
+                      onClick={(e) => handleRequestDelete(folder, e)}
                       className="p-1.5 hover:bg-(--color-bg-primary) rounded-md transition-all duration-200 cursor-pointer"
                       title={t('common.delete')}
                     >
@@ -154,6 +165,19 @@ export default function FolderList({
           </div>
         );
       })}
+
+      <ConfirmDialog
+        show={showDeleteDialog}
+        title={t('common.delete')}
+        description={pendingDeleteFolder ? t('knowledgeBase.deleteFolder', { name: pendingDeleteFolder.name }) : t('common.delete')}
+        confirmText={t('common.delete')}
+        confirmVariant="danger"
+        onConfirm={confirmDeleteFolder}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setPendingDeleteFolder(null);
+        }}
+      />
     </div>
   );
 }
