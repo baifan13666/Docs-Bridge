@@ -7,6 +7,23 @@ import { createServerClient } from '@supabase/ssr';
 const intlMiddleware = createMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
+  const requestUrl = request.nextUrl;
+  const code = requestUrl.searchParams.get('code');
+  if (code && !requestUrl.pathname.startsWith('/auth/callback')) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl && (requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1')) {
+      const redirectUrl = new URL('/auth/callback', siteUrl);
+      requestUrl.searchParams.forEach((value, key) => {
+        redirectUrl.searchParams.set(key, value);
+      });
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    const redirectUrl = requestUrl.clone();
+    redirectUrl.pathname = '/auth/callback';
+    return NextResponse.redirect(redirectUrl);
+  }
+
   // --- 1. Supabase Auth: Refresh session cookies ---
   const response = NextResponse.next();
 

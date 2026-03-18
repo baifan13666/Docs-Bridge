@@ -20,6 +20,9 @@ export default function SignInModal({ onClose }: SignInModalProps) {
   const [resendCooldown, setResendCooldown] = useState(0);
   const supabase = createClient();
   const router = useRouter();
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '');
 
   // Countdown timer for resend cooldown
   useEffect(() => {
@@ -44,7 +47,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
         // User will be automatically created if they don't exist
       },
     });
@@ -66,7 +69,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
       email,
       options: {
         // shouldCreateUser defaults to true, so users are auto-registered
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
       },
     });
 
@@ -90,7 +93,7 @@ export default function SignInModal({ onClose }: SignInModalProps) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
       },
     });
 
