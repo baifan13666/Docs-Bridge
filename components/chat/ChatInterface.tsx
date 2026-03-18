@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import SignInModal from '../auth/SignInModal';
-import PipelineProgress from './PipelineProgress';
 import WelcomeMessage from './WelcomeMessage';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
@@ -212,17 +211,6 @@ export default function ChatInterface({
     
     pipeline.updateStep(3, 'completed');
     
-    // Create temporary streaming message
-    const tempStreamingMessage = {
-      id: `streaming-${Date.now()}`,
-      role: 'assistant' as const,
-      content: '',
-      created_at: new Date().toISOString(),
-      isStreaming: true
-    };
-    
-    addMessage(tempStreamingMessage);
-    
     // Execute streaming query
     console.log(`[ChatInterface] Calling executeStreamingQuery - RequestID: ${requestId}`);
     const result = await executeStreamingQuery(
@@ -246,7 +234,7 @@ export default function ChatInterface({
     
     // Remove temporary streaming message and add final messages
     if (result.userMessage && result.assistantMessage) {
-      setMessages(prev => prev.filter(m => !m.id.startsWith('streaming-')));
+      setMessages(prev => prev.filter(m => !m.id.startsWith('streaming-') && !m.id.startsWith('temp-user-')));
       addMessages([result.userMessage, result.assistantMessage]);
       
       // Auto-translate if dialect detected
@@ -296,16 +284,26 @@ export default function ChatInterface({
     try {
       if (!isAuthenticated) {
         console.log(`[ChatInterface] ${sendMessageId} - Processing as guest user`);
-        
-        // Add user message to UI
-        const tempUserMessage = {
-          id: Date.now().toString(),
-          role: 'user' as const,
-          content: userMessageContent,
-          created_at: new Date().toISOString()
-        };
-        addMessage(tempUserMessage);
       }
+
+      // Add user message to UI immediately (both guest and authenticated)
+      const tempUserMessage = {
+        id: `temp-user-${Date.now()}`,
+        role: 'user' as const,
+        content: userMessageContent,
+        created_at: new Date().toISOString()
+      };
+      addMessage(tempUserMessage);
+      
+      // Add temporary streaming assistant message so pipeline appears inside AI response bubble
+      const tempStreamingMessage = {
+        id: `streaming-${Date.now()}`,
+        role: 'assistant' as const,
+        content: '',
+        created_at: new Date().toISOString(),
+        isStreaming: true
+      };
+      addMessage(tempStreamingMessage);
       
       // Step 1: Language & Dialect Detection
       console.log(`[ChatInterface] ${sendMessageId} - Step 1: Detecting language...`);
@@ -452,9 +450,6 @@ export default function ChatInterface({
     <>
       <div className={`flex-1 overflow-y-auto px-4 py-8 transition-all duration-300 ${wordExplanation.showWordSidebar ? 'mr-96' : ''}`}>
         <div className="max-w-3xl mx-auto space-y-8 flex flex-col pb-32">
-          {/* Pipeline Progress Indicator */}
-          <PipelineProgress steps={pipeline.steps} show={pipeline.showPipeline} />
-          
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="w-8 h-8 border-4 border-(--color-accent) border-t-transparent rounded-full animate-spin"></div>
@@ -468,6 +463,8 @@ export default function ChatInterface({
             <ChatMessages
               messages={messages}
               isStreaming={isStreaming}
+              pipelineSteps={pipeline.steps}
+              pipelineShow={pipeline.showPipeline}
               messageView={messageView}
               messageEnhancements={messageEnhancements}
               loadingStates={loadingEnhancements}

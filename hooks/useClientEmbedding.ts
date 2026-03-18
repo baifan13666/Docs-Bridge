@@ -134,6 +134,7 @@ export function useClientEmbedding(): UseClientEmbeddingReturn {
     
     // Generate unique ID for this request
     const id = `${Date.now()}-${Math.random()}`;
+    const startTime = Date.now();
     
     // Create promise for this request
     const promise = new Promise<EmbeddingResult>((resolve, reject) => {
@@ -151,13 +152,26 @@ export function useClientEmbedding(): UseClientEmbeddingReturn {
     // Send request to worker
     setIsLoading(true);
     setError(null);
+    console.log('[Client Embedding] Generating embedding locally...', {
+      id,
+      text_preview: text.substring(0, 80)
+    });
     workerRef.current.postMessage({
       type: 'generate',
       text,
       id,
     });
     
-    return promise;
+    return promise.then(result => {
+      const duration = Date.now() - startTime;
+      console.log('[Client Embedding] ✅ Local embedding generated', {
+        id,
+        dimension: result.dimension,
+        duration_ms: duration,
+        sample: result.embedding?.slice?.(0, 8)
+      });
+      return result;
+    });
   }, []);
 
   // Generate embedding with cache check
@@ -179,6 +193,10 @@ export function useClientEmbedding(): UseClientEmbeddingReturn {
         const cacheData = await cacheResponse.json();
         if (cacheData.embedding) {
           console.log('[Client Embedding] ✅ Cache hit!');
+          console.log('[Client Embedding] Cache embedding details', {
+            dimension: cacheData.embedding.length,
+            sample: cacheData.embedding?.slice?.(0, 8)
+          });
           return {
             embedding: cacheData.embedding,
             dimension: cacheData.embedding.length,

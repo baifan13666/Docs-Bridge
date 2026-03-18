@@ -28,6 +28,8 @@ interface Message {
 interface ChatMessagesProps {
   messages: Message[];
   isStreaming: boolean;
+  pipelineSteps?: { id: number; name: string; status: 'pending' | 'active' | 'completed' | 'skipped'; result?: string }[];
+  pipelineShow?: boolean;
   messageView: { [messageId: string]: 'original' | 'simplified' | 'translated' };
   messageEnhancements: {
     [messageId: string]: {
@@ -65,6 +67,8 @@ interface ChatMessagesProps {
 export default function ChatMessages({
   messages,
   isStreaming,
+  pipelineSteps,
+  pipelineShow,
   messageView,
   messageEnhancements,
   loadingStates,
@@ -95,6 +99,8 @@ export default function ChatMessages({
           key={message.id}
           message={message}
           isStreaming={isStreaming}
+          pipelineSteps={pipelineSteps}
+          pipelineShow={pipelineShow}
           messageView={messageView[message.id] || 'original'}
           messageContent={getMessageContent(message.id, message.content)}
           messageEnhancements={messageEnhancements[message.id]}

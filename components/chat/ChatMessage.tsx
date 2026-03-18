@@ -7,6 +7,7 @@ import MessageActions from './MessageActions';
 import MessageEnhancements from './MessageEnhancements';
 import MessageSources from './MessageSources';
 import ConfidenceDisplay from './ConfidenceDisplay';
+import PipelineProgress from './PipelineProgress';
 import * as nlpApi from '@/lib/api/nlp';
 
 interface Message {
@@ -33,6 +34,8 @@ interface Message {
 interface ChatMessageProps {
   message: Message;
   isStreaming: boolean;
+  pipelineSteps?: { id: number; name: string; status: 'pending' | 'active' | 'completed' | 'skipped'; result?: string }[];
+  pipelineShow?: boolean;
   messageView: 'original' | 'simplified' | 'translated';
   messageContent: string;
   messageEnhancements?: {
@@ -66,6 +69,8 @@ interface ChatMessageProps {
 export default function ChatMessage({
   message,
   isStreaming,
+  pipelineSteps,
+  pipelineShow,
   messageView,
   messageContent,
   messageEnhancements,
@@ -103,6 +108,11 @@ export default function ChatMessage({
               : 'bg-(--color-message-ai-bg) text-(--color-message-ai-text) rounded-tl-sm border border-(--color-message-ai-border)'
           }`}
         >
+          {message.role === 'assistant' && message.id.startsWith('streaming-') && pipelineShow && (
+            <div className="mb-3">
+              <PipelineProgress steps={pipelineSteps || []} show={pipelineShow} />
+            </div>
+          )}
           {/* Action buttons for assistant messages */}
           {message.role === 'assistant' && (
             <MessageActions
