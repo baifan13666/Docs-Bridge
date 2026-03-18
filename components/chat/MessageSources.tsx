@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface Source {
   chunk_id: string;
@@ -20,6 +20,14 @@ interface MessageSourcesProps {
 export default function MessageSources({ sources, isAuthenticated }: MessageSourcesProps) {
   const t = useTranslations('chatInterface');
   const router = useRouter();
+  const pathname = usePathname();
+  
+  const getKnowledgeBasePath = () => {
+    const segments = (pathname || '').split('/').filter(Boolean);
+    if (segments.length === 0) return '/knowledge-base';
+    const locale = segments[0];
+    return `/${locale}/knowledge-base`;
+  };
 
   if (!sources || sources.length === 0) {
     return null;
@@ -36,7 +44,7 @@ export default function MessageSources({ sources, isAuthenticated }: MessageSour
             key={source.chunk_id}
             onClick={() => {
               if (isAuthenticated && source.document_id) {
-                router.push(`/knowledge-base?doc=${source.document_id}`);
+                router.push(`${getKnowledgeBasePath()}?doc=${source.document_id}`);
               }
             }}
             className={`text-xs bg-(--color-bg-secondary) p-2 rounded border border-(--color-border) transition-all ${

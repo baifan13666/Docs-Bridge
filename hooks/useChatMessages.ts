@@ -24,6 +24,27 @@ export function useChatMessages(
   const [loading, setLoading] = useState(false);
   const justCreatedConversation = useRef(false);
 
+  function dedupeMessages(items: Message[]) {
+    const seenIds = new Set<string>();
+    const seenSignatures = new Set<string>();
+    const deduped: Message[] = [];
+
+    for (const msg of items) {
+      if (msg.id && seenIds.has(msg.id)) {
+        continue;
+      }
+      const signature = `${msg.role}|${msg.content}|${msg.created_at}`;
+      if (seenSignatures.has(signature)) {
+        continue;
+      }
+      if (msg.id) seenIds.add(msg.id);
+      seenSignatures.add(signature);
+      deduped.push(msg);
+    }
+
+    return deduped;
+  }
+
   useEffect(() => {
     if (isAuthenticated && conversationId) {
       if (justCreatedConversation.current) {
@@ -78,8 +99,17 @@ export function useChatMessages(
         content: m.content,
         created_at: m.created_at
       }));
+      const signatureCounts = new Map<string, number>();
+      convertedMessages.forEach(msg => {
+        const signature = `${msg.role}|${msg.content}|${msg.created_at}`;
+        signatureCounts.set(signature, (signatureCounts.get(signature) || 0) + 1);
+      });
+      const duplicateSignatures = Array.from(signatureCounts.entries()).filter(([, count]) => count > 1);
+      if (duplicateSignatures.length > 0) {
+        console.warn('[useChatMessages] Duplicate messages detected from API:', duplicateSignatures.slice(0, 5));
+      }
       
-      setMessages(convertedMessages);
+      setMessages(dedupeMessages(convertedMessages));
     } catch (error) {
       console.error('Error loading messages:', error);
     } finally {
@@ -89,7 +119,7 @@ export function useChatMessages(
 
   function addMessage(message: Message) {
     setMessages(prev => {
-      const updated = [...prev, message];
+      const updated = dedupeMessages([...prev, message]);
       // Save to localStorage if guest user
       if (!isAuthenticated) {
         saveGuestConversation(updated);
@@ -100,7 +130,7 @@ export function useChatMessages(
 
   function addMessages(newMessages: Message[]) {
     setMessages(prev => {
-      const updated = [...prev, ...newMessages];
+      const updated = dedupeMessages([...prev, ...newMessages]);
       // Save to localStorage if guest user
       if (!isAuthenticated) {
         saveGuestConversation(updated);

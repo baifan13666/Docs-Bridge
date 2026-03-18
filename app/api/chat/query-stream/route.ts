@@ -42,6 +42,30 @@ interface SearchResult {
   rerank_score?: number;
 }
 
+const recentRequestSignatures = new Map<string, number>();
+
+function cleanupRecentSignatures(now: number, windowMs: number) {
+  for (const [key, timestamp] of recentRequestSignatures.entries()) {
+    if (now - timestamp > windowMs) {
+      recentRequestSignatures.delete(key);
+    }
+  }
+}
+
+function buildRequestSignature(input: {
+  conversationId: string;
+  query: string;
+  originalQuery?: string;
+  modelMode?: string;
+}) {
+  return [
+    input.conversationId,
+    input.modelMode || '',
+    input.originalQuery || '',
+    input.query
+  ].join('|');
+}
+
 function clampScore(score: number): number {
   if (Number.isNaN(score)) return 0;
   return Math.min(1, Math.max(0, score));
@@ -134,6 +158,26 @@ export async function POST(request: NextRequest) {
         } = body;
 
         console.log(`[RAG Stream] RequestID: ${requestId} - Received request for conversation: ${conversation_id}`);
+        console.log(`[RAG Stream] RequestID: ${requestId} - Query: "${String(query || '').substring(0, 100)}..."`);
+        if (original_query && original_query !== query) {
+          console.log(`[RAG Stream] RequestID: ${requestId} - Original Query: "${String(original_query).substring(0, 100)}..."`);
+        }
+        console.log(`[RAG Stream] RequestID: ${requestId} - Model mode: ${model_mode}`);
+
+        const signatureWindowMs = 5000;
+        const now = Date.now();
+        cleanupRecentSignatures(now, signatureWindowMs);
+        const signature = buildRequestSignature({
+          conversationId: conversation_id,
+          query,
+          originalQuery: original_query,
+          modelMode: model_mode
+        });
+        const lastSeen = recentRequestSignatures.get(signature);
+        if (lastSeen) {
+          console.warn(`[RAG Stream] RequestID: ${requestId} - Duplicate request detected within ${signatureWindowMs}ms`);
+        }
+        recentRequestSignatures.set(signature, now);
 
         if (!conversation_id || !query) {
           sendEvent('error', { error: 'conversation_id and query are required' });

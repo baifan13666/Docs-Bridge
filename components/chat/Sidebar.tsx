@@ -57,6 +57,13 @@ export default function Sidebar({
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
   const pathname = usePathname();
+  
+  const getChatBasePath = () => {
+    const segments = (pathname || '').split('/').filter(Boolean);
+    if (segments.length === 0) return '/';
+    const locale = segments[0];
+    return `/${locale}`;
+  };
 
   // Load conversations and folders on mount
   useEffect(() => {
@@ -153,7 +160,8 @@ export default function Sidebar({
     
     try {
       const newConv = await chatApi.createConversation();
-      router.push(`/?conversation=${newConv.id}`);
+      const basePath = getChatBasePath();
+      router.push(`${basePath}?conversation=${newConv.id}`);
       await loadConversations();
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -172,7 +180,7 @@ export default function Sidebar({
       
       // If deleted current conversation, redirect to home
       if (convId === currentConversationId) {
-        router.push('/');
+        router.push(getChatBasePath());
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);
@@ -397,7 +405,7 @@ export default function Sidebar({
                             ? 'bg-(--color-sidebar-active) text-(--color-sidebar-text) border border-(--color-sidebar-border)'
                             : 'hover:bg-(--color-sidebar-hover) text-(--color-sidebar-text-secondary) hover:text-(--color-sidebar-text)'
                         }`}
-                        onClick={() => router.push(`/?conversation=${conv.id}`)}
+                        onClick={() => router.push(`${getChatBasePath()}?conversation=${conv.id}`)}
                       >
                         <span className="truncate font-medium flex-1">{conv.title}</span>
                         <button
@@ -427,7 +435,7 @@ export default function Sidebar({
                             ? 'bg-(--color-sidebar-active) text-(--color-sidebar-text) border border-(--color-sidebar-border)'
                             : 'hover:bg-(--color-sidebar-hover) text-(--color-sidebar-text-secondary) hover:text-(--color-sidebar-text)'
                         }`}
-                        onClick={() => router.push(`/?conversation=${conv.id}`)}
+                        onClick={() => router.push(`${getChatBasePath()}?conversation=${conv.id}`)}
                       >
                         <span className="truncate font-medium flex-1">{conv.title}</span>
                         <button
@@ -457,7 +465,7 @@ export default function Sidebar({
                             ? 'bg-(--color-sidebar-active) text-(--color-sidebar-text) border border-(--color-sidebar-border)'
                             : 'hover:bg-(--color-sidebar-hover) text-(--color-sidebar-text-secondary) hover:text-(--color-sidebar-text)'
                         }`}
-                        onClick={() => router.push(`/?conversation=${conv.id}`)}
+                        onClick={() => router.push(`${getChatBasePath()}?conversation=${conv.id}`)}
                       >
                         <span className="truncate font-medium flex-1">{conv.title}</span>
                         <button
@@ -500,7 +508,7 @@ export default function Sidebar({
                               ? 'bg-(--color-sidebar-active) text-(--color-sidebar-text) border border-(--color-sidebar-border)'
                               : 'hover:bg-(--color-sidebar-hover) text-(--color-sidebar-text-secondary) hover:text-(--color-sidebar-text)'
                           }`}
-                          onClick={() => router.push(`/?conversation=${conv.id}`)}
+                          onClick={() => router.push(`${getChatBasePath()}?conversation=${conv.id}`)}
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <span className="material-symbols-outlined text-[16px] text-(--color-sidebar-text-secondary)">

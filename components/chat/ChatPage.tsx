@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Sidebar from './Sidebar';
 import ChatInterface from './ChatInterface';
@@ -27,6 +27,7 @@ export default function ChatPage({
 }: ChatPageProps) {
   const t = useTranslations();
   const router = useRouter();
+  const pathname = usePathname();
   const [modelMode, setModelMode] = useState<'standard' | 'mini'>('mini');
   const [showModelPopover, setShowModelPopover] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -139,7 +140,8 @@ export default function ChatPage({
       
       // Redirect to home if archiving current conversation
       if (!isArchived) {
-        router.push('/');
+        const basePath = `/${(pathname || '').split('/').filter(Boolean)[0] || ''}`.replace(/\/$/, '') || '/';
+        router.push(basePath);
       } else {
         // Just refresh if unarchiving
         router.refresh();
@@ -192,7 +194,8 @@ export default function ChatPage({
       setShowDeleteDialog(false);
       
       // Redirect to home
-      router.push('/');
+      const basePath = `/${(pathname || '').split('/').filter(Boolean)[0] || ''}`.replace(/\/$/, '') || '/';
+      router.push(basePath);
     } catch (error) {
       console.error('Error deleting conversation:', error);
       toast.error(t('common.error'));
