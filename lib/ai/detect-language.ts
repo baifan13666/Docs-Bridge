@@ -11,6 +11,7 @@
 import { generateText, Output } from 'ai';
 import { createModelWithHealing, ModelPresets } from './openrouter';
 import { LanguageDetectionSchema, type LanguageDetection } from './schemas';
+import { logAiError } from './error-logging';
 
 /**
  * Simple heuristic-based language detection as fallback
@@ -115,7 +116,7 @@ Respond with a JSON object containing: language, dialect, confidence, explanatio
     
     return output;
   } catch (error) {
-    console.error('[Language Detection] ❌ Error:', error);
+    logAiError('Language Detection', error);
     
     // Try heuristic-based detection as fallback
     console.log('[Language Detection] Attempting heuristic fallback...');

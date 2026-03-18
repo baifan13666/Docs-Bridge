@@ -63,8 +63,7 @@ export async function POST(request: NextRequest) {
         embedding: embedding,
         language: language,
         dialect: dialect,
-        hit_count: 1,
-        user_id: user?.id // Optional: track who contributed
+        hit_count: 1
       }, {
         onConflict: 'query_hash'
       });

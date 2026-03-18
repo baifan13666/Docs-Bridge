@@ -5,6 +5,7 @@
 import { generateText, Output } from 'ai';
 import { createModelWithHealing, ModelPresets } from './openrouter';
 import { SimplificationResultSchema, type DifficultWord } from './schemas';
+import { logAiError } from './error-logging';
 
 export interface ReadabilityScore {
   original: number;
@@ -83,7 +84,7 @@ Return JSON with: simplified (string), difficult_words (array of {word, explanat
       readability_score,
     };
   } catch (error) {
-    console.error('[Text Simplification] ❌ Error:', error);
+    logAiError('Text Simplification', error);
     throw error;
   }
 }

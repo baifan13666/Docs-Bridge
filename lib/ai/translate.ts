@@ -5,6 +5,7 @@
 import { generateText, Output } from 'ai';
 import { createModelWithHealing, ModelPresets } from './openrouter';
 import { TranslationResultSchema } from './schemas';
+import { logAiError } from './error-logging';
 
 export interface TranslationAlternative {
   text: string;
@@ -59,7 +60,7 @@ Return JSON with: translated (string), confidence (0-100), alternatives (optiona
       target_dialect: targetDialect,
     };
   } catch (error) {
-    console.error('[Translation] ❌ Error:', error);
+    logAiError('Translation', error);
     throw error;
   }
 }

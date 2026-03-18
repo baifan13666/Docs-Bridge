@@ -8,6 +8,7 @@
 import { generateText, Output } from 'ai';
 import { createModelWithHealing, ModelPresets } from './openrouter';
 import { QueryRewriteSchema } from './schemas';
+import { logAiError } from './error-logging';
 
 export interface QueryRewriteResult {
   original: string;
@@ -58,7 +59,7 @@ export async function rewriteQuery(
     
     return result;
   } catch (error) {
-    console.error('[Query Rewrite] ❌ Error:', error);
+    logAiError('Query Rewrite', error);
     
     // Fallback: Return original query
     return {

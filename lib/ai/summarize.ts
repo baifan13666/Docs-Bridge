@@ -5,6 +5,7 @@
 import { generateText, Output } from 'ai';
 import { createModelWithHealing, ModelPresets } from './openrouter';
 import { SummarizationResultSchema } from './schemas';
+import { logAiError } from './error-logging';
 
 export interface WordCount {
   original: number;
@@ -134,7 +135,7 @@ Return JSON with:
       };
     }
   } catch (error) {
-    console.error('[Summarization] ❌ Error:', error);
+    logAiError('Summarization', error);
     throw error;
   }
 }
