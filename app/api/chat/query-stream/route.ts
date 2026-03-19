@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
         
         let searchResults = null;
         let queryEmbedding: number[] | null = null;
-        if (!isGuest && user) {
+        if (user || isGuest) {
           // Use provided embedding, or generate server-side as last resort
           queryEmbedding = providedEmbedding;
           if (queryEmbedding && queryEmbedding.length > 0) {
@@ -256,9 +256,11 @@ export async function POST(request: NextRequest) {
               queryEmbedding = await generateQueryEmbedding(query, 'query');
               console.log(`[RAG Stream] RequestID: ${requestId} - ✅ Generated ${queryEmbedding.length}-dim embedding server-side`);
               
-              // Cache the newly generated embedding for future use
-              await cacheEmbedding(query, queryEmbedding);
-              console.log(`[RAG Stream] RequestID: ${requestId} - ✅ Cached new embedding`);
+              // Cache the newly generated embedding for future use (only for authenticated users)
+              if (user) {
+                await cacheEmbedding(query, queryEmbedding);
+                console.log(`[RAG Stream] RequestID: ${requestId} - ✅ Cached new embedding`);
+              }
             } catch (generateError) {
               console.error(`[RAG Stream] RequestID: ${requestId} - Failed to generate embedding server-side:`, generateError);
               sendEvent('error', { error: 'Failed to generate query embedding. Please try again.' });
@@ -274,7 +276,7 @@ export async function POST(request: NextRequest) {
               query_text: query,
               query_embedding: queryEmbedding,
               match_count: 10,
-              p_user_id: user.id,
+              p_user_id: user?.id || null, // Pass null for guests to search public documents only
               active_folder_ids: active_folders
             });
 
